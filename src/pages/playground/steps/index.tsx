@@ -3,6 +3,7 @@ import { TopicPage } from "../TopicPage";
 import { ScriptWritingPage } from "../ScriptWritingPage";
 import { VoiceOversPage } from "../VoiceOversPage";
 import { FootagePage } from "../FootagePage";
+import { BrandingPage } from "../BrandingPage";
 
 export function StepTopic() {
   return <TopicPage />;
@@ -61,11 +62,5 @@ export function StepAudio() {
 }
 
 export function StepWatermark() {
-  return (
-    <StepPanel
-      step={9}
-      title="Branding"
-      description="Add branding or a watermark to your video."
-    />
-  );
+  return <BrandingPage />;
 }

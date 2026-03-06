@@ -14,7 +14,7 @@ export function Header() {
         >
             <ChevronLeft size={20} />
             <h1 className="text-[15px] font-bold tracking-wide text-white">
-                {isSettings ? "Back" : isPlayground ? "Playground" : "Create Collection"}
+                {isSettings ? "Back" : isPlayground ? "Playground" : "Brand Kit"}
             </h1>
         </Link>
     );

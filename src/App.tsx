@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { MediaEditorPanel } from "./components/media-editor/MediaEditorPanel";
+import { BrandKitsPage } from "./pages/BrandKitsPage";
+import { CreateBrandKitPage } from "./pages/CreateBrandKitPage";
 import { SettingsLayout } from "./pages/settings/SettingsLayout";
 import { SettingsGeneral } from "./pages/settings/SettingsGeneral";
 import { SettingsApi } from "./pages/settings/SettingsApi";
@@ -32,7 +34,9 @@ function App() {
           <Header />
           <main className="flex-1 overflow-auto bg-[#0A0D14]">
             <Routes>
-              <Route path="/" element={<MediaEditorPanel />} />
+              <Route path="/" element={<BrandKitsPage />} />
+              <Route path="/brand-kits/new" element={<CreateBrandKitPage />} />
+              <Route path="/editor" element={<MediaEditorPanel />} />
               <Route path="/media-library" element={<MediaLibraryPage />} />
               <Route path="/x-tools" element={<XToolsPage />} />
               <Route path="/playground" element={<PlaygroundLayout />}>

@@ -1,24 +1,16 @@
 import { useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { FolderSearch, Upload, Search, X, ChevronDown, RotateCcw, Repeat } from "lucide-react";
+import { FolderOpen, Upload, Search, X, ChevronRight, RotateCcw, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { AVAILABLE_FOLDERS } from "./constants";
 
 type MergeStrategy = "random" | "ai-auto" | "serially" | "color-style" | "keyword-based";
+type FillMode = "one-clip" | "multi-clip" | "loop";
 type SelectedItem = { id: string; name: string; type: "folder" | "file" | "import" };
-
-const AVAILABLE_FOLDERS = [
-  "My Videos",
-  "Stock Clips",
-  "dev-environment",
-  "FB Posting",
-  "iphone 11 pro 2",
-  "Iphone 13 Pro to 15 Pro Max",
-  "Picture",
-];
 
 const initialLibraryItems: SelectedItem[] = AVAILABLE_FOLDERS.map((name) => ({
   id: `folder-${name}`,
@@ -44,7 +36,6 @@ const MERGE_RULES: { title: string; description: string }[] = [
   { title: "Each clip speed type", description: "Set playback speed for each clip. One speed value applied to clips." },
   { title: "Clip Freshness Merge", description: "Prefers clips that were used less frequently in previous videos." },
   { title: "No Repeat Mode", description: "Avoids repeating the same clip within the same video." },
-  { title: "Call To Action Merge", description: "Ensures CTA clips appear near the end." },
   { title: "Loop settings", description: "Control how footage clips repeat to fill your video length or segment duration." },
 ];
 
@@ -59,12 +50,14 @@ export function FootagePage() {
   );
   const [keywordMergeKeywords, setKeywordMergeKeywords] = useState<string[]>([]);
   const [keywordMergeInput, setKeywordMergeInput] = useState("");
-  const [ctaMergeFolderNames, setCtaMergeFolderNames] = useState<string[]>([]);
   const [colorStyleColors, setColorStyleColors] = useState<string[]>([]);
   const [colorStyleInput, setColorStyleInput] = useState("");
   const [clipSpeed, setClipSpeed] = useState(1);
-  const [loopMode, setLoopMode] = useState<"until-audio" | "fixed-times" | "play-then-reverse">("until-audio");
+  const [fillMode, setFillMode] = useState<FillMode>("multi-clip");
+  const [loopMode, setLoopMode] = useState<"fixed-times" | "play-then-reverse">("fixed-times");
   const [loopTimes, setLoopTimes] = useState(2);
+  const [serialOrder, setSerialOrder] = useState<"from-start" | "from-end">("from-start");
+
   const setRuleEnabled = (title: string, enabled: boolean) => {
     setMergeRuleEnabled((prev) => ({ ...prev, [title]: enabled }));
   };
@@ -79,12 +72,6 @@ export function FootagePage() {
 
   const removeKeyword = (word: string) => {
     setKeywordMergeKeywords((prev) => prev.filter((w) => w !== word));
-  };
-
-  const toggleCtaFolder = (folderName: string) => {
-    setCtaMergeFolderNames((prev) =>
-      prev.includes(folderName) ? prev.filter((f) => f !== folderName) : [...prev, folderName]
-    );
   };
 
   const addColorStyleColor = () => {
@@ -130,598 +117,355 @@ export function FootagePage() {
   const removeItem = (id: string) => setLibraryItems((prev) => prev.filter((i) => i.id !== id));
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* Header – same as Voice Overs */}
-      <div className="shrink-0 py-6 px-8 border-b border-border">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step 5</span>
-        <h1 className="text-2xl font-bold text-white tracking-tight mt-1">Media</h1>
-        <p className="text-sm text-muted-foreground mt-2">Add and arrange video in your media library.</p>
+    <div className="flex flex-col h-full min-h-0 bg-[#0D1117]">
+      {/* Toolbar – desktop app style */}
+      <div className="shrink-0 h-11 px-4 flex items-center gap-4 border-b border-border/80 bg-[#161B22]">
+        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Step 5</span>
+        <ChevronRight size={14} className="text-muted-foreground/60 shrink-0" />
+        <h1 className="text-sm font-semibold text-foreground">Media</h1>
+        <div className="flex-1" />
+        <div className="relative w-48">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Search library…"
+            value={librarySearch}
+            onChange={(e) => setLibrarySearch(e.target.value)}
+            className="h-8 pl-8 pr-2 text-xs bg-background/50 border-border rounded-md"
+            aria-label="Search media library"
+          />
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*"
+          multiple
+          className="sr-only"
+          onChange={handleFileChange}
+          aria-label="Upload video files"
+        />
+        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs px-3" onClick={handleUploadClick}>
+          <Upload size={14} />
+          Add files
+        </Button>
       </div>
 
       <div className="flex-1 min-h-0 flex overflow-hidden">
-        <div className="flex-1 min-w-0 flex flex-col overflow-auto">
-          <div className="p-8 space-y-6">
-            {/* Media Library – one library, 3 ways to add */}
-            <section className="rounded-xl border border-border bg-[#131922] p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <FolderSearch size={20} className="text-muted-foreground shrink-0" />
-                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium">
-                  Media Library
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Folders are listed below — select and search from there. Add more with Upload video.
+        {/* Left: Library panel – file-manager style */}
+        <aside className="w-56 shrink-0 flex flex-col border-r border-border/80 bg-[#161B22]">
+          <div className="shrink-0 px-2 py-2 border-b border-border/60">
+            <div className="flex items-center gap-2 px-2 py-1">
+              <FolderOpen size={14} className="text-muted-foreground shrink-0" />
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Library</span>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto py-1">
+            {filteredLibrary.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground px-3 py-4 text-center">
+                {libraryItems.length === 0 ? "No folders. Add files." : "No matches."}
               </p>
+            ) : (
+              <ul className="space-y-0.5 px-1">
+                {filteredLibrary.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-1 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-white/5 group"
+                  >
+                    <span className="min-w-0 truncate">{item.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </aside>
 
-              {/* Upload video | Import */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  multiple
-                  className="sr-only"
-                  onChange={handleFileChange}
-                  aria-label="Upload video files"
+            {/* Center: empty / info (desktop app main area) */}
+        <main className="flex-1 min-w-0 flex flex-col items-center justify-center p-8 bg-[#0D1117]">
+          <p className="text-[13px] text-muted-foreground text-center max-w-sm">
+            Select folders in the library. Configure fill mode and merge rules in the Properties panel.
+          </p>
+          <p className="text-[11px] text-muted-foreground/70 mt-2">{libraryItems.length} item{libraryItems.length !== 1 ? "s" : ""} in library</p>
+        </main>
+
+        {/* Right: Properties panel – desktop inspector style */}
+        <aside className="w-72 shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden">
+          <div className="shrink-0 px-3 py-2 border-b border-border/60 flex items-center gap-2">
+            <Settings2 size={14} className="text-muted-foreground shrink-0" />
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Properties</span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
+            {/* Clip length */}
+            <div>
+              <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Clip length (sec)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0.5}
+                  max={60}
+                  step={0.5}
+                  value={clipLength}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (!Number.isNaN(v)) setClipLength(Math.min(60, Math.max(0.5, v)));
+                  }}
+                  className="w-16 h-8 text-xs tabular-nums"
+                  aria-label="Default clip length in seconds"
                 />
-                <Button type="button" variant="outline" size="sm" className="gap-2" onClick={handleUploadClick}>
-                  <Upload size={16} />
-                  Upload video
-                </Button>
+                <span className="text-[11px] text-muted-foreground">per clip</span>
               </div>
+            </div>
 
-              {/* Search your library */}
-              <div className="mb-2">
-                <Label className="text-xs text-muted-foreground block mb-1.5">Search your library</Label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <Input
-                    type="search"
-                    placeholder="Search folders and footage…"
-                    value={librarySearch}
-                    onChange={(e) => setLibrarySearch(e.target.value)}
-                    className="pl-9 h-9 rounded-lg bg-background/50 border-border"
-                    aria-label="Search your media library"
-                  />
-                </div>
-              </div>
-
-              {/* Your chosen footage */}
-              <div className="rounded-lg border border-border bg-background/30 min-h-[140px] max-h-[220px] overflow-y-auto">
-                <div className="p-2">
-                    {filteredLibrary.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-6 text-center">
-                      {libraryItems.length === 0
-                        ? "No footage yet. Upload video to add to your library."
-                        : "No items match your search."}
-                    </p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {filteredLibrary.map((item) => (
-                        <li
-                          key={item.id}
-                          className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-white/5 group"
-                        >
-                          <span className="min-w-0 truncate">{item.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item.id)}
-                            className="shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-label={`Remove ${item.name}`}
-                          >
-                            <X size={14} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <p className="text-xs text-muted-foreground mt-3">
-                Footage in your library is used according to the merge rules below.
-              </p>
-            </section>
-
-            {/* Merge Rules – section card */}
-            <section className="rounded-xl border border-border bg-[#131922] p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <ChevronDown size={18} className="text-muted-foreground rotate-180 shrink-0" />
-                <Label className="text-sm font-semibold text-foreground">Merge Rules</Label>
-              </div>
-              <p className="text-xs text-muted-foreground mb-6">
-                How clips from your footage library are chosen and combined for each segment.
-              </p>
-
-              {/* Existing settings – each inside its own box */}
-              <div className="space-y-6 mb-6 pb-6 border-b border-border">
-                {/* Default clip length – inside one box */}
-                <div className="rounded-lg border border-border bg-background/30 px-4 py-4">
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium block mb-2">
-                    Default clip length (seconds)
-                  </Label>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Input
-                      type="number"
-                      min={0.5}
-                      max={60}
-                      step={0.5}
-                      value={clipLength}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        if (!Number.isNaN(v)) setClipLength(Math.min(60, Math.max(0.5, v)));
-                      }}
-                      className="w-20 h-9 tabular-nums"
-                      aria-label="Default clip length in seconds"
-                    />
-                    <span className="text-sm text-muted-foreground">seconds per clip</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Target length for each clip used in the video.</p>
-                </div>
-
-                {/* Primary merge strategy – label above, each option in its own box */}
-                <div className="flex flex-col gap-3">
-                  <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium">
-                    Primary merge strategy
-                  </Label>
-                  <div className="space-y-3">
-                    <label
-                      className={cn(
-                        "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                        mergeStrategy === "random"
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/30 hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="merge-strategy"
-                          value="random"
-                          checked={mergeStrategy === "random"}
-                          onChange={() => setMergeStrategy("random")}
-                          className="h-4 w-4 border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm font-medium text-foreground">Random from selected folders</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 ml-7">Pick clips randomly from the folders you selected.</p>
-                    </label>
-
-                    <label
-                      className={cn(
-                        "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                        mergeStrategy === "ai-auto"
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/30 hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="merge-strategy"
-                          value="ai-auto"
-                          checked={mergeStrategy === "ai-auto"}
-                          onChange={() => setMergeStrategy("ai-auto")}
-                          className="h-4 w-4 border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm font-medium text-foreground">AI Auto Match</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 ml-7">AI picks clips that best match each part of your script.</p>
-                    </label>
-
-                    <label
-                      className={cn(
-                        "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                        mergeStrategy === "serially"
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/30 hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="merge-strategy"
-                          value="serially"
-                          checked={mergeStrategy === "serially"}
-                          onChange={() => setMergeStrategy("serially")}
-                          className="h-4 w-4 border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm font-medium text-foreground">Serial order</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 ml-7">Use clips in order from the selected folders, one after another.</p>
-                    </label>
-
-                    <label
-                      className={cn(
-                        "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                        mergeStrategy === "color-style"
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/30 hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="merge-strategy"
-                          value="color-style"
-                          checked={mergeStrategy === "color-style"}
-                          onChange={() => setMergeStrategy("color-style")}
-                          className="h-4 w-4 border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm font-medium text-foreground">Color Style Matching</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 ml-7">Selects clips with similar color tone or visual style.</p>
-                    </label>
-
-                    <label
-                      className={cn(
-                        "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                        mergeStrategy === "keyword-based"
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/30 hover:bg-white/5"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="merge-strategy"
-                          value="keyword-based"
-                          checked={mergeStrategy === "keyword-based"}
-                          onChange={() => setMergeStrategy("keyword-based")}
-                          className="h-4 w-4 border-input text-primary focus:ring-ring"
-                        />
-                        <span className="text-sm font-medium text-foreground">Keyword Based Merge</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 ml-7">Matches clips based on keywords detected in the script.</p>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Color Style options – when Color Style Matching is selected */}
-                {mergeStrategy === "color-style" && (
-                  <div className="mt-4 pt-4 border-t border-border space-y-3">
-                    <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium block mb-2">Color / style names</Label>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Select colors or add your own. Clips with similar color tone or style will be preferred.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {COLOR_STYLE_PRESETS.map((preset) => (
-                        <button
-                          key={preset.name}
-                          type="button"
-                          onClick={() => toggleColorStylePreset(preset.name)}
-                          className={cn(
-                            "inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                            colorStyleColors.includes(preset.name)
-                              ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/30"
-                              : "border-border bg-background/50 text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                          )}
-                        >
-                          <span
-                            className="size-3 rounded-full shrink-0 border border-white/20"
-                            style={{ backgroundColor: preset.hex }}
-                          />
-                          {preset.name}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {colorStyleColors.map((name) => (
-                        <span
-                          key={name}
-                          className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary px-2.5 py-1 text-xs font-medium"
-                        >
-                          {name}
-                          <button
-                            type="button"
-                            onClick={() => removeColorStyleColor(name)}
-                            className="rounded p-0.5 hover:bg-primary/25 transition-colors"
-                            aria-label={`Remove ${name}`}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={colorStyleInput}
-                        onChange={(e) => setColorStyleInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === ",") {
-                            e.preventDefault();
-                            addColorStyleColor();
-                          }
-                        }}
-                        placeholder="Add custom color or style name"
-                        className="h-8 text-sm flex-1"
-                        aria-label="Add color or style"
-                      />
-                      <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" onClick={addColorStyleColor}>
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Keyword options – when Keyword Based Merge is selected */}
-                {mergeStrategy === "keyword-based" && (
-                  <div className="mt-4 pt-4 border-t border-border space-y-2">
-                    <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium block mb-2">Keywords</Label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {keywordMergeKeywords.map((word) => (
-                        <span
-                          key={word}
-                          className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary px-2.5 py-1 text-xs font-medium"
-                        >
-                          {word}
-                          <button
-                            type="button"
-                            onClick={() => removeKeyword(word)}
-                            className="rounded p-0.5 hover:bg-primary/25 transition-colors"
-                            aria-label={`Remove ${word}`}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={keywordMergeInput}
-                        onChange={(e) => setKeywordMergeInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === ",") {
-                            e.preventDefault();
-                            addKeyword();
-                          }
-                        }}
-                        placeholder="Type a keyword and press Enter"
-                        className="h-8 text-sm flex-1"
-                        aria-label="Add keyword"
-                      />
-                      <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" onClick={addKeyword}>
-                        Add
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Select multiple keywords; clips will match these when detected in the script.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Merge rule options – toggles (Color Style & Keyword Based moved to Primary merge strategy) */}
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium block mb-3">
-                Merge rule options
-              </Label>
-              <p className="text-xs text-muted-foreground mb-4">
-                Turn each rule on or off. Enabled rules apply when merging clips.
-              </p>
-              <div className="grid grid-cols-1 gap-4">
-                {MERGE_RULES.map((rule) => (
-                  <div
-                    key={rule.title}
+            {/* Fill Mode – compact list */}
+            <div>
+              <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-2">Fill Mode</Label>
+              <div className="space-y-1">
+                {(
+                  [
+                    { value: "one-clip" as const, label: "One Clip", hint: "clip 10s → video 10s" },
+                    { value: "multi-clip" as const, label: "Multi Clip", hint: "clip1 + clip2 + clip3" },
+                    { value: "loop" as const, label: "Loop", hint: "clip1 + clip1 + clip1" },
+                  ] as const
+                ).map(({ value, label, hint }) => (
+                  <label
+                    key={value}
                     className={cn(
-                      "rounded-lg border px-4 py-3 transition-colors",
-                      mergeRuleEnabled[rule.title]
-                        ? "border-border bg-background/30"
-                        : "border-border/80 bg-background/20 opacity-80"
+                      "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                      fillMode === value ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground mb-0.5">{rule.title}</p>
-                        <p className="text-xs text-muted-foreground">{rule.description}</p>
-                      </div>
+                    <input
+                      type="radio"
+                      name="fill-mode"
+                      value={value}
+                      checked={fillMode === value}
+                      onChange={() => setFillMode(value)}
+                      className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                    />
+                    <span className="flex-1 min-w-0">{label}</span>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{hint}</span>
+                  </label>
+                ))}
+              </div>
+              {/* Loop options – only when Fill Mode is Loop */}
+              {fillMode === "loop" && (
+                <div className="mt-2 pt-2 border-t border-border/60 space-y-2">
+                  <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Loop</Label>
+                  <div className="space-y-1">
+                    {(["fixed-times", "play-then-reverse"] as const).map((mode) => (
+                      <label
+                        key={mode}
+                        className={cn(
+                          "flex items-center gap-2 rounded px-1.5 py-1 cursor-pointer text-[12px]",
+                          loopMode === mode ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="loop-mode"
+                          value={mode}
+                          checked={loopMode === mode}
+                          onChange={() => setLoopMode(mode)}
+                          className="h-3 w-3 border-input text-primary"
+                        />
+                        {mode === "fixed-times" ? "Fixed times" : "Play + reverse"}
+                      </label>
+                    ))}
+                  </div>
+                  {loopMode === "fixed-times" && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={loopTimes}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          if (!Number.isNaN(v)) setLoopTimes(Math.min(99, Math.max(1, Math.round(v))));
+                        }}
+                        className="w-14 h-7 text-xs tabular-nums"
+                      />
+                      <span className="text-[11px] text-muted-foreground">times</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Merge strategy – compact list */}
+            <div>
+              <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-2">Merge strategy</Label>
+              <div className="space-y-1">
+                {(
+                  [
+                    { value: "random" as const, label: "Random" },
+                    { value: "ai-auto" as const, label: "AI Auto Clip Match" },
+                    { value: "serially" as const, label: "In order (one after another)" },
+                    { value: "color-style" as const, label: "AI Color style" },
+                    { value: "keyword-based" as const, label: "Keyword" },
+                  ] as const
+                ).map(({ value, label }) => (
+                  <label
+                    key={value}
+                    className={cn(
+                      "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                      mergeStrategy === value ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="merge-strategy"
+                      value={value}
+                      checked={mergeStrategy === value}
+                      onChange={() => setMergeStrategy(value)}
+                      className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              {/* Serial order – when Serial is selected */}
+              {mergeStrategy === "serially" && (
+                <div className="mt-2 pt-2 border-t border-border/60 space-y-2">
+                  <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Order</Label>
+                  <div className="space-y-1">
+                    <label
+                      className={cn(
+                        "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                        serialOrder === "from-start" ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="serial-order"
+                        value="from-start"
+                        checked={serialOrder === "from-start"}
+                        onChange={() => setSerialOrder("from-start")}
+                        className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                      />
+                      <span className="flex-1 min-w-0">From start</span>
+                      <span className="text-[10px] text-muted-foreground">First clip first, then next</span>
+                    </label>
+                    <label
+                      className={cn(
+                        "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                        serialOrder === "from-end" ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="serial-order"
+                        value="from-end"
+                        checked={serialOrder === "from-end"}
+                        onChange={() => setSerialOrder("from-end")}
+                        className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                      />
+                      <span className="flex-1 min-w-0">From end</span>
+                      <span className="text-[10px] text-muted-foreground">Last clip first, then previous</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+                {mergeStrategy === "color-style" && (
+              <div className="space-y-2 pt-2 border-t border-border/60">
+                <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Color / style</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {COLOR_STYLE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => toggleColorStylePreset(preset.name)}
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded border px-1.5 py-1 text-[11px] transition-colors",
+                        colorStyleColors.includes(preset.name)
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border/80 bg-background/50 text-muted-foreground hover:bg-white/5"
+                      )}
+                    >
+                      <span className="size-2 rounded-full border border-white/20 shrink-0" style={{ backgroundColor: preset.hex }} />
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-1.5">
+                  <Input
+                    value={colorStyleInput}
+                    onChange={(e) => setColorStyleInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addColorStyleColor(); } }}
+                    placeholder="Custom…"
+                    className="h-7 text-xs flex-1"
+                  />
+                  <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs shrink-0" onClick={addColorStyleColor}>Add</Button>
+                </div>
+              </div>
+            )}
+            {mergeStrategy === "keyword-based" && (
+              <div className="space-y-2 pt-2 border-t border-border/60">
+                <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Keywords</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {keywordMergeKeywords.map((word) => (
+                    <span key={word} className="inline-flex items-center gap-1 rounded bg-primary/15 text-primary px-1.5 py-0.5 text-[11px]">
+                      {word}
+                      <button type="button" onClick={() => removeKeyword(word)} className="rounded p-0.5 hover:bg-primary/25" aria-label={`Remove ${word}`}><X size={10} /></button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-1.5">
+                  <Input value={keywordMergeInput} onChange={(e) => setKeywordMergeInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addKeyword(); } }} placeholder="Keyword + Enter" className="h-7 text-xs flex-1" />
+                  <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs shrink-0" onClick={addKeyword}>Add</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Merge rules – compact toggles */}
+            <div className="pt-3 border-t border-border/60">
+              <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-2">Rules</Label>
+              <div className="space-y-1">
+                {MERGE_RULES.filter((rule) => rule.title !== "Loop settings").map((rule) => (
+                  <div key={rule.title} className={cn("rounded px-2 py-1.5", mergeRuleEnabled[rule.title] ? "bg-background/30" : "opacity-75")}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[12px] text-foreground truncate" title={rule.description}>{rule.title}</span>
                       <Switch
                         checked={mergeRuleEnabled[rule.title] ?? false}
                         onCheckedChange={(checked) => setRuleEnabled(rule.title, checked)}
                         aria-label={`Toggle ${rule.title}`}
-                        className="shrink-0 mt-0.5"
+                        className="shrink-0 scale-75 origin-right"
                       />
                     </div>
-                    {/* Each clip speed type – single speed input + slider when on */}
                     {rule.title === "Each clip speed type" && mergeRuleEnabled[rule.title] && (
-                      <div className="mt-4 pt-4 border-t border-border space-y-3">
-                        <p className="text-xs text-muted-foreground">
-                          Set playback speed for each clip. 1× is normal playback.
-                        </p>
-                        <div className="rounded-lg border border-border bg-background/50 px-4 py-4 space-y-3">
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-sm text-foreground">Speed</span>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min={0.5}
-                                max={2}
-                                step={0.1}
-                                value={clipSpeed}
-                                onChange={(e) => {
-                                  const v = Number(e.target.value);
-                                  if (!Number.isNaN(v)) setClipSpeed(Math.min(2, Math.max(0.5, v)));
-                                }}
-                                className="w-16 h-9 text-sm tabular-nums"
-                                aria-label="Clip speed"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
-                                onClick={() => setClipSpeed(1)}
-                                aria-label="Reset speed to 1"
-                              >
-                                <RotateCcw size={16} />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground tabular-nums w-8">0.5</span>
-                            <input
-                              type="range"
-                              min={0.5}
-                              max={2}
-                              step={0.1}
-                              value={clipSpeed}
-                              onChange={(e) => setClipSpeed(Number(e.target.value))}
-                              className="flex-1 h-2.5 rounded-full appearance-none bg-input accent-primary cursor-pointer"
-                              aria-valuemin={0.5}
-                              aria-valuemax={2}
-                              aria-valuenow={clipSpeed}
-                            />
-                            <span className="text-xs text-muted-foreground tabular-nums w-8">2</span>
+                      <div className="mt-2 pt-2 border-t border-border/60 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground">Speed</span>
+                          <div className="flex items-center gap-1">
+                            <Input type="number" min={0.5} max={2} step={0.1} value={clipSpeed} onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) setClipSpeed(Math.min(2, Math.max(0.5, v))); }} className="w-12 h-7 text-xs tabular-nums" />
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setClipSpeed(1)} aria-label="Reset speed"><RotateCcw size={12} /></Button>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    {/* CTA folder selection – only when Call To Action Merge is on */}
-                    {rule.title === "Call To Action Merge" && mergeRuleEnabled[rule.title] && (
-                      <div className="mt-4 pt-4 border-t border-border space-y-3">
-                        <Label className="text-xs text-muted-foreground block">CTA footage folders</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Select which folders contain your call-to-action clips. These will be used near the end of the video.
-                        </p>
-                        <div className="flex flex-wrap gap-3">
-                          {AVAILABLE_FOLDERS.map((folderName) => (
-                            <label
-                              key={folderName}
-                              className={cn(
-                                "flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm",
-                                ctaMergeFolderNames.includes(folderName)
-                                  ? "border-primary bg-primary/10 text-foreground"
-                                  : "border-border bg-background/50 text-muted-foreground hover:bg-white/5"
-                              )}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={ctaMergeFolderNames.includes(folderName)}
-                                onChange={() => toggleCtaFolder(folderName)}
-                                className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-                              />
-                              <span>{folderName}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Loop settings – when Loop settings option is on */}
-                    {rule.title === "Loop settings" && mergeRuleEnabled[rule.title] && (
-                      <div className="mt-4 pt-4 border-t border-border space-y-4">
-                        <div className="flex flex-col gap-3">
-                          <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium">
-                            Loop mode
-                          </Label>
-                          <div className="space-y-3">
-                            <label
-                              className={cn(
-                                "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                                loopMode === "until-audio"
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-background/30 hover:bg-white/5"
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <input
-                                  type="radio"
-                                  name="loop-mode"
-                                  value="until-audio"
-                                  checked={loopMode === "until-audio"}
-                                  onChange={() => setLoopMode("until-audio")}
-                                  className="h-4 w-4 border-input text-primary focus:ring-ring"
-                                />
-                                <span className="text-sm font-medium text-foreground">Loop until audio/voiceover duration</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1.5 ml-7">
-                                Clips repeat until the total video length matches your voiceover or audio track.
-                              </p>
-                            </label>
-
-                            <label
-                              className={cn(
-                                "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                                loopMode === "fixed-times"
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-background/30 hover:bg-white/5"
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <input
-                                  type="radio"
-                                  name="loop-mode"
-                                  value="fixed-times"
-                                  checked={loopMode === "fixed-times"}
-                                  onChange={() => setLoopMode("fixed-times")}
-                                  className="h-4 w-4 border-input text-primary focus:ring-ring"
-                                />
-                                <span className="text-sm font-medium text-foreground">Loop how many times?</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1.5 ml-7">
-                                Repeat each clip or the clip sequence a fixed number of times.
-                              </p>
-                            </label>
-
-                            <label
-                              className={cn(
-                                "block rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                                loopMode === "play-then-reverse"
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-background/30 hover:bg-white/5"
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <input
-                                  type="radio"
-                                  name="loop-mode"
-                                  value="play-then-reverse"
-                                  checked={loopMode === "play-then-reverse"}
-                                  onChange={() => setLoopMode("play-then-reverse")}
-                                  className="h-4 w-4 border-input text-primary focus:ring-ring"
-                                />
-                                <span className="text-sm font-medium text-foreground">One play, one reverse</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1.5 ml-7">
-                                Within each loop: play clip forward then backward (ping-pong).
-                              </p>
-                            </label>
-                          </div>
-                        </div>
-
-                        {loopMode === "fixed-times" && (
-                          <div className="pt-4 border-t border-border">
-                            <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium block mb-2">
-                              Number of loops
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                min={1}
-                                max={99}
-                                value={loopTimes}
-                                onChange={(e) => {
-                                  const v = Number(e.target.value);
-                                  if (!Number.isNaN(v)) setLoopTimes(Math.min(99, Math.max(1, Math.round(v))));
-                                }}
-                                className="w-20 h-9 tabular-nums"
-                                aria-label="How many times to loop"
-                              />
-                              <span className="text-sm text-muted-foreground">times</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">e.g. 2 = play through twice.</p>
-                          </div>
-                        )}
+                        <input type="range" min={0.5} max={2} step={0.1} value={clipSpeed} onChange={(e) => setClipSpeed(Number(e.target.value))} className="w-full h-1.5 rounded-full appearance-none bg-input accent-primary cursor-pointer" />
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
           </div>
-        </div>
+        </aside>
       </div>
 
-      {/* Bottom CTA */}
-      <div className="shrink-0 p-8 pt-4">
-        <Button size="lg" className="w-full h-12 font-semibold uppercase tracking-wider text-sm gap-2" asChild>
-          <Link to="/playground/overlays">Continue to Overlays &gt;</Link>
+      {/* Status bar + action – desktop style */}
+      <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+        <span className="text-[11px] text-muted-foreground">{libraryItems.length} item{libraryItems.length !== 1 ? "s" : ""}</span>
+        <Button size="sm" className="h-7 text-xs px-4" asChild>
+          <Link to="/playground/overlays">Continue to Overlays</Link>
         </Button>
       </div>
     </div>

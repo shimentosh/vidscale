@@ -20,7 +20,7 @@ export function Sidebar() {
             </div>
 
             <nav className="flex-1 w-full px-3 space-y-1">
-                <SidebarNavLink icon={<LayoutDashboard size={18} />} to="/" label="Dashboard" />
+                <SidebarNavLink icon={<LayoutDashboard size={18} />} to="/" label="Brand Kit" />
                 <SidebarNavLink icon={<FlaskConical size={18} />} to="/playground" label="Playground" />
             </nav>
 
