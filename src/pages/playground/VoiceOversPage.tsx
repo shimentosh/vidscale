@@ -112,7 +112,7 @@ export function VoiceOversPage() {
     <div className="flex flex-col h-full min-h-0">
       {/* Header – same as Script Writing */}
       <div className="shrink-0 py-6 px-8 border-b border-border">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step 4</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step 3</span>
         <h1 className="text-2xl font-bold text-white tracking-tight mt-1">Voice Overs</h1>
         <p className="text-sm text-muted-foreground mt-2">Record or generate voice-over for your script.</p>
       </div>

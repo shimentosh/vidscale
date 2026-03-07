@@ -32,6 +32,11 @@ export function getBrandKits(): BrandKit[] {
   return kits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export function getBrandKitById(id: string): BrandKit | null {
+  const kits = loadKits();
+  return kits.find((k) => k.id === id) ?? null;
+}
+
 export function saveBrandKit(input: { name: string; description?: string; primaryColor?: string }): BrandKit {
   const kits = loadKits();
   const kit: BrandKit = {
@@ -44,6 +49,31 @@ export function saveBrandKit(input: { name: string; description?: string; primar
   kits.push(kit);
   saveKits(kits);
   return kit;
+}
+
+export function updateBrandKit(
+  id: string,
+  input: { name: string; description?: string; primaryColor?: string }
+): BrandKit | null {
+  const kits = loadKits();
+  const index = kits.findIndex((k) => k.id === id);
+  if (index === -1) return null;
+  kits[index] = {
+    ...kits[index],
+    name: input.name?.trim() || "Untitled Brand Kit",
+    description: input.description?.trim() || undefined,
+    primaryColor: input.primaryColor ?? undefined,
+  };
+  saveKits(kits);
+  return kits[index];
+}
+
+export function deleteBrandKit(id: string): boolean {
+  const kits = loadKits();
+  const filtered = kits.filter((k) => k.id !== id);
+  if (filtered.length === kits.length) return false;
+  saveKits(filtered);
+  return true;
 }
 
 export function seedDemoBrandKits(): BrandKit[] {

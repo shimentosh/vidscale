@@ -9,16 +9,6 @@ export function StepTopic() {
   return <TopicPage />;
 }
 
-export function StepHookWriting() {
-  return (
-    <StepPanel
-      step={2}
-      title="Hook Writing"
-      description="Craft an engaging hook to capture attention."
-    />
-  );
-}
-
 export function StepScriptWriting() {
   return <ScriptWritingPage />;
 }
@@ -34,7 +24,7 @@ export function StepFootage() {
 export function StepOverlays() {
   return (
     <StepPanel
-      step={6}
+      step={5}
       title="Overlays"
       description="Add graphics, text, and overlay elements."
     />
@@ -44,7 +34,7 @@ export function StepOverlays() {
 export function StepSubtitle() {
   return (
     <StepPanel
-      step={7}
+      step={6}
       title="Subtitle"
       description="Add and style subtitles or captions."
     />
@@ -54,7 +44,7 @@ export function StepSubtitle() {
 export function StepAudio() {
   return (
     <StepPanel
-      step={8}
+      step={7}
       title="Audio"
       description="Background music and sound design."
     />

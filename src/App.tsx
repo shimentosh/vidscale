@@ -11,7 +11,6 @@ import { SettingsStorage } from "./pages/settings/SettingsStorage";
 import { PlaygroundLayout } from "./pages/playground/PlaygroundLayout";
 import {
   StepTopic,
-  StepHookWriting,
   StepScriptWriting,
   StepVoiceOvers,
   StepFootage,
@@ -36,6 +35,7 @@ function App() {
             <Routes>
               <Route path="/" element={<BrandKitsPage />} />
               <Route path="/brand-kits/new" element={<CreateBrandKitPage />} />
+              <Route path="/brand-kits/:id" element={<CreateBrandKitPage />} />
               <Route path="/editor" element={<MediaEditorPanel />} />
               <Route path="/media-library" element={<MediaLibraryPage />} />
               <Route path="/x-tools" element={<XToolsPage />} />
@@ -43,7 +43,6 @@ function App() {
                 <Route index element={<Navigate to="/playground/topic" replace />} />
                 <Route path="topic/review" element={<ReviewTopicsPage />} />
                 <Route path="topic" element={<StepTopic />} />
-                <Route path="hook-writing" element={<StepHookWriting />} />
                 <Route path="script-writing" element={<StepScriptWriting />} />
                 <Route path="script-writing/preview" element={<ScriptPreviewPage />} />
                 <Route path="voice-overs" element={<StepVoiceOvers />} />

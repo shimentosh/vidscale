@@ -10,21 +10,21 @@ export function Header() {
     const backLink = (
         <Link
             to="/"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            className="flex items-center gap-2 py-2 pr-2 -ml-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
         >
-            <ChevronLeft size={20} />
-            <h1 className="text-[15px] font-bold tracking-wide text-white">
+            <ChevronLeft size={18} className="shrink-0" />
+            <span className="text-sm font-semibold tracking-tight text-foreground truncate">
                 {isSettings ? "Back" : isPlayground ? "Playground" : "Brand Kit"}
-            </h1>
+            </span>
         </Link>
     );
 
     return (
-        <header className="h-16 flex items-center justify-between border-b border-border px-6 bg-[#0A0D14] shrink-0">
-            <div className="flex items-center gap-2">
+        <header className="h-[69px] shrink-0 flex items-center justify-between border-b border-border px-6 bg-[#0D1117]">
+            <div className="flex items-center gap-3 min-w-0">
                 {backLink}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 shrink-0">
                 <Button
                     variant="ghost"
                     size="sm"

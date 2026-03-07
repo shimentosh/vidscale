@@ -4,18 +4,37 @@ import { FolderOpen, Upload, Search, X, ChevronRight, RotateCcw, Settings2 } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { AVAILABLE_FOLDERS } from "./constants";
 
 type MergeStrategy = "random" | "ai-auto" | "serially" | "color-style" | "keyword-based";
 type FillMode = "one-clip" | "multi-clip" | "loop";
-type SelectedItem = { id: string; name: string; type: "folder" | "file" | "import" };
+type SelectedItem = { id: string; name: string; type: "folder" | "file" | "import"; itemCount?: number };
+
+/** Default item counts per folder for display (placeholder until real counts exist) */
+const DEFAULT_FOLDER_COUNTS: Record<string, number> = {
+  "My Videos": 12,
+  "Stock Clips": 8,
+  "dev-environment": 5,
+  "FB Posting": 3,
+  "iphone 11 pro 2": 7,
+  "Iphone 13 Pro to 15 Pro Max": 4,
+  "Picture": 6,
+};
 
 const initialLibraryItems: SelectedItem[] = AVAILABLE_FOLDERS.map((name) => ({
   id: `folder-${name}`,
   name,
   type: "folder",
+  itemCount: DEFAULT_FOLDER_COUNTS[name] ?? 0,
 }));
 
 const COLOR_STYLE_PRESETS: { name: string; hex: string }[] = [
@@ -39,6 +58,20 @@ const MERGE_RULES: { title: string; description: string }[] = [
   { title: "Loop settings", description: "Control how footage clips repeat to fill your video length or segment duration." },
 ];
 
+type TransitionMode = "single" | "random" | "serial";
+const TRANSITION_MODES: { value: TransitionMode; label: string }[] = [
+  { value: "single", label: "Single" },
+  { value: "random", label: "Random" },
+  { value: "serial", label: "Serial" },
+];
+
+const TRANSITION_TYPES = [
+  "Cut", "Fade", "Cross Fade", "Fade to Black", "Fade to White",
+  "Slide Left", "Slide Right", "Slide Up", "Slide Down", "Push",
+  "Zoom In", "Zoom Out", "Zoom Blur", "Blur", "Motion Blur", "Gaussian Blur",
+  "Glitch", "Digital Distortion", "RGB Split", "Spin", "Rotate", "Ripple", "Wave",
+] as const;
+
 export function FootagePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [libraryItems, setLibraryItems] = useState<SelectedItem[]>(initialLibraryItems);
@@ -57,6 +90,11 @@ export function FootagePage() {
   const [loopMode, setLoopMode] = useState<"fixed-times" | "play-then-reverse">("fixed-times");
   const [loopTimes, setLoopTimes] = useState(2);
   const [serialOrder, setSerialOrder] = useState<"from-start" | "from-end">("from-start");
+
+  const [transitionOn, setTransitionOn] = useState(false);
+  const [transitionMode, setTransitionMode] = useState<TransitionMode>("single");
+  const [transitionType, setTransitionType] = useState<string>(TRANSITION_TYPES[0]);
+  const [transitionDuration, setTransitionDuration] = useState(0.5);
 
   const setRuleEnabled = (title: string, enabled: boolean) => {
     setMergeRuleEnabled((prev) => ({ ...prev, [title]: enabled }));
@@ -108,6 +146,7 @@ export function FootagePage() {
           id: `file-${Date.now()}-${i}`,
           name: f.name,
           type: "file" as const,
+          itemCount: 1,
         })),
       ]);
     }
@@ -118,22 +157,25 @@ export function FootagePage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[#0D1117]">
-      {/* Toolbar – desktop app style */}
-      <div className="shrink-0 h-11 px-4 flex items-center gap-4 border-b border-border/80 bg-[#161B22]">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Step 5</span>
-        <ChevronRight size={14} className="text-muted-foreground/60 shrink-0" />
-        <h1 className="text-sm font-semibold text-foreground">Media</h1>
-        <div className="flex-1" />
-        <div className="relative w-48">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="Search library…"
-            value={librarySearch}
-            onChange={(e) => setLibrarySearch(e.target.value)}
-            className="h-8 pl-8 pr-2 text-xs bg-background/50 border-border rounded-md"
-            aria-label="Search media library"
-          />
+      {/* Toolbar – clean bar with breadcrumb */}
+      <div className="shrink-0 h-12 px-5 flex items-center gap-3 border-b border-border/80 bg-[#161B22]">
+        <div className="flex items-center gap-2 min-w-0 shrink-0">
+          <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Step 4</span>
+          <ChevronRight size={14} className="text-muted-foreground/50" aria-hidden />
+          <h1 className="text-sm font-semibold text-foreground truncate">Media</h1>
+        </div>
+        <div className="flex-1 min-w-0 max-w-[200px] mx-4">
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Search library…"
+              value={librarySearch}
+              onChange={(e) => setLibrarySearch(e.target.value)}
+              className="h-8 w-full min-w-0 pl-8 pr-2 text-xs bg-background/50 border-border/80 rounded-lg"
+              aria-label="Search media library"
+            />
+          </div>
         </div>
         <input
           ref={fileInputRef}
@@ -144,7 +186,7 @@ export function FootagePage() {
           onChange={handleFileChange}
           aria-label="Upload video files"
         />
-        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs px-3" onClick={handleUploadClick}>
+        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs px-3 shrink-0" onClick={handleUploadClick}>
           <Upload size={14} />
           Add files
         </Button>
@@ -152,11 +194,11 @@ export function FootagePage() {
 
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Left: Library panel – file-manager style */}
-        <aside className="w-56 shrink-0 flex flex-col border-r border-border/80 bg-[#161B22]">
-          <div className="shrink-0 px-2 py-2 border-b border-border/60">
-            <div className="flex items-center gap-2 px-2 py-1">
+        <aside className="w-[220px] min-w-[200px] shrink-0 flex flex-col border-r border-border/80 bg-[#161B22]">
+          <div className="shrink-0 px-3 py-3 border-b border-border/60">
+            <div className="flex items-center gap-2">
               <FolderOpen size={14} className="text-muted-foreground shrink-0" />
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Library</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Library</span>
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto py-1">
@@ -169,9 +211,12 @@ export function FootagePage() {
                 {filteredLibrary.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-center justify-between gap-1 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-white/5 group"
+                    className="flex items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-white/5 group"
                   >
-                    <span className="min-w-0 truncate">{item.name}</span>
+                    <span className="min-w-0 flex-1 truncate" title={item.name}>
+                      {item.name}
+                    </span>
+                    <span className="w-9 shrink-0 text-right text-muted-foreground tabular-nums">({item.itemCount ?? 0})</span>
                     <button
                       type="button"
                       onClick={() => removeItem(item.id)}
@@ -196,7 +241,7 @@ export function FootagePage() {
         </main>
 
         {/* Right: Properties panel – desktop inspector style */}
-        <aside className="w-72 shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden">
+        <aside className="w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden">
           <div className="shrink-0 px-3 py-2 border-b border-border/60 flex items-center gap-2">
             <Settings2 size={14} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Properties</span>
@@ -238,7 +283,7 @@ export function FootagePage() {
                     key={value}
                     className={cn(
                       "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                      fillMode === value ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                      fillMode === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
                     )}
                   >
                     <input
@@ -247,7 +292,7 @@ export function FootagePage() {
                       value={value}
                       checked={fillMode === value}
                       onChange={() => setFillMode(value)}
-                      className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                      className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
                     />
                     <span className="flex-1 min-w-0">{label}</span>
                     <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{hint}</span>
@@ -264,7 +309,7 @@ export function FootagePage() {
                         key={mode}
                         className={cn(
                           "flex items-center gap-2 rounded px-1.5 py-1 cursor-pointer text-[12px]",
-                          loopMode === mode ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                          loopMode === mode ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
                         )}
                       >
                         <input
@@ -273,7 +318,7 @@ export function FootagePage() {
                           value={mode}
                           checked={loopMode === mode}
                           onChange={() => setLoopMode(mode)}
-                          className="h-3 w-3 border-input text-primary"
+                          className="h-3 w-3 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
                         />
                         {mode === "fixed-times" ? "Fixed times" : "Play + reverse"}
                       </label>
@@ -316,7 +361,7 @@ export function FootagePage() {
                     key={value}
                     className={cn(
                       "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                      mergeStrategy === value ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                      mergeStrategy === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
                     )}
                   >
                     <input
@@ -325,7 +370,7 @@ export function FootagePage() {
                       value={value}
                       checked={mergeStrategy === value}
                       onChange={() => setMergeStrategy(value)}
-                      className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                      className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
                     />
                     {label}
                   </label>
@@ -339,7 +384,7 @@ export function FootagePage() {
                     <label
                       className={cn(
                         "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                        serialOrder === "from-start" ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                        serialOrder === "from-start" ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
                       )}
                     >
                       <input
@@ -348,7 +393,7 @@ export function FootagePage() {
                         value="from-start"
                         checked={serialOrder === "from-start"}
                         onChange={() => setSerialOrder("from-start")}
-                        className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                        className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
                       />
                       <span className="flex-1 min-w-0">From start</span>
                       <span className="text-[10px] text-muted-foreground">First clip first, then next</span>
@@ -356,7 +401,7 @@ export function FootagePage() {
                     <label
                       className={cn(
                         "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                        serialOrder === "from-end" ? "bg-primary/15 text-primary" : "text-foreground hover:bg-white/5"
+                        serialOrder === "from-end" ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
                       )}
                     >
                       <input
@@ -365,7 +410,7 @@ export function FootagePage() {
                         value="from-end"
                         checked={serialOrder === "from-end"}
                         onChange={() => setSerialOrder("from-end")}
-                        className="h-3.5 w-3.5 border-input text-primary focus:ring-ring"
+                        className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
                       />
                       <span className="flex-1 min-w-0">From end</span>
                       <span className="text-[10px] text-muted-foreground">Last clip first, then previous</span>
@@ -425,6 +470,85 @@ export function FootagePage() {
                 </div>
               </div>
             )}
+
+            {/* Video Transition */}
+            <div className="pt-3 border-t border-border/60 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Video Transition</Label>
+                <Switch
+                  checked={transitionOn}
+                  onCheckedChange={setTransitionOn}
+                  aria-label="Video transition on or off"
+                  className="shrink-0 scale-75 origin-right"
+                />
+              </div>
+              <span className="text-[10px] text-muted-foreground block -mt-1">{transitionOn ? "ON" : "OFF"}</span>
+
+              {transitionOn && (
+                <>
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Mode</Label>
+                    <div className="space-y-1">
+                      {TRANSITION_MODES.map(({ value, label }) => (
+                        <label
+                          key={value}
+                          className={cn(
+                            "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                            transitionMode === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="transition-mode"
+                            value={value}
+                            checked={transitionMode === value}
+                            onChange={() => setTransitionMode(value)}
+                            className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
+                            />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Type</Label>
+                    <Select value={transitionType} onValueChange={setTransitionType}>
+                      <SelectTrigger className="h-8 text-xs w-full">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRANSITION_TYPES.map((type) => (
+                          <SelectItem key={type} value={type} className="text-xs">
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Duration</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min={0.1}
+                        max={5}
+                        step={0.1}
+                        value={transitionDuration}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          if (!Number.isNaN(v)) setTransitionDuration(Math.min(5, Math.max(0.1, v)));
+                        }}
+                        className="w-16 h-8 text-xs tabular-nums"
+                        aria-label="Transition duration in seconds"
+                      />
+                      <span className="text-[11px] text-muted-foreground">sec</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Merge rules – compact toggles */}
             <div className="pt-3 border-t border-border/60">
