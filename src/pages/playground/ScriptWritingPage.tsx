@@ -545,14 +545,18 @@ export function ScriptWritingPage() {
           </div>
         </div>
 
-        {/* Right: Summary + Generate (sticky sidebar on desktop) */}
-        <aside className="w-80 shrink-0 border-l border-border bg-[#0D1117]/50 flex flex-col overflow-hidden hidden lg:flex">
-          <div className="p-6 space-y-5 overflow-auto">
+        {/* Right: Summary (same style as Topic headline preview sidebar) */}
+        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden hidden lg:flex">
+          <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-2">
+            <ScrollText size={14} className="text-muted-foreground shrink-0" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Summary
+            </span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-5">
             <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</h3>
-
               {/* Duration big, word count small */}
-              <div className="rounded-lg border border-border bg-[#131922]/80 p-4">
+              <div className="rounded-lg border border-border/60 bg-[#131922] p-4">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Est. duration when spoken</p>
                 <p className="text-3xl font-bold tabular-nums text-primary leading-tight">
                   {formatDuration(durationEstimateSeconds)}
@@ -634,35 +638,46 @@ export function ScriptWritingPage() {
         </aside>
       </div>
 
-      {/* Bottom bar: Generate (visible when sidebar is hidden, e.g. smaller screens) */}
-      <div className="shrink-0 p-6 border-t border-border bg-background/30 lg:hidden">
-        <div className="max-w-3xl mx-auto">
-          {Object.keys(scriptBodies).length > 0 ? (
-            <Button size="lg" className="w-full h-12 font-medium" onClick={() => setShowPreviewEditor(true)}>
-              Open script preview
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              disabled={isGeneratingScript}
-              className="w-full h-12 font-medium gap-2"
-              onClick={() => {
-                if (isGeneratingScript) return;
-                setShowGenerateModal(true);
-                setIsGeneratingScript(true);
-              }}
-            >
-              {isGeneratingScript ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Generating script…
-                </>
-              ) : (
-                "Generate script"
-              )}
-            </Button>
-          )}
+      {/* Bottom bar: only show once content is generated */}
+      {Object.keys(scriptBodies).length > 0 && (
+        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+          <span className="text-[11px] text-muted-foreground">
+            {scriptTitlesLocal.length} item{scriptTitlesLocal.length === 1 ? "" : "s"}
+          </span>
+          <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
+            <Link to="/playground/voice-overs" state={{ scriptTitles: scriptTitlesLocal, scriptBodies }}>
+              Continue to Voice Overs
+            </Link>
+          </Button>
         </div>
+      )}
+      {/* Generate / Open preview (needed to click and generate script) */}
+      <div className="shrink-0 p-4 border-t border-border bg-background/30 lg:hidden">
+        {Object.keys(scriptBodies).length > 0 ? (
+          <Button size="lg" className="w-full h-11 font-medium" onClick={() => setShowPreviewEditor(true)}>
+            Open script preview
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            disabled={isGeneratingScript}
+            className="w-full h-11 font-medium gap-2"
+            onClick={() => {
+              if (isGeneratingScript) return;
+              setShowGenerateModal(true);
+              setIsGeneratingScript(true);
+            }}
+          >
+            {isGeneratingScript ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Generating script…
+              </>
+            ) : (
+              "Generate script"
+            )}
+          </Button>
+        )}
       </div>
         </>
       )}
@@ -824,10 +839,13 @@ export function ScriptWritingPage() {
                   <Button variant="secondary" size="sm">Save script</Button>
                 </footer>
               </div>
-              <div className="shrink-0 p-8 pt-4">
-                <Button asChild size="lg" className="w-full h-12 text-base font-medium">
+              <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+                <span className="text-[11px] text-muted-foreground">
+                  {scriptTitlesLocal.length} item{scriptTitlesLocal.length === 1 ? "" : "s"}
+                </span>
+                <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
                   <Link to="/playground/voice-overs" state={{ scriptTitles: scriptTitlesLocal, scriptBodies }}>
-                    CONFIRM & VOICEOVER &gt;
+                    Continue to Voice Overs
                   </Link>
                 </Button>
               </div>

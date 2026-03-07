@@ -19,7 +19,6 @@ import {
   StepAudio,
   StepWatermark,
 } from "./pages/playground/steps";
-import { ReviewTopicsPage } from "./pages/playground/ReviewTopicsPage";
 import { ScriptPreviewPage } from "./pages/playground/ScriptPreviewPage";
 import { MediaLibraryPage } from "./pages/MediaLibraryPage";
 import { XToolsPage } from "./pages/XToolsPage";
@@ -41,7 +40,6 @@ function App() {
               <Route path="/x-tools" element={<XToolsPage />} />
               <Route path="/playground" element={<PlaygroundLayout />}>
                 <Route index element={<Navigate to="/playground/topic" replace />} />
-                <Route path="topic/review" element={<ReviewTopicsPage />} />
                 <Route path="topic" element={<StepTopic />} />
                 <Route path="script-writing" element={<StepScriptWriting />} />
                 <Route path="script-writing/preview" element={<ScriptPreviewPage />} />

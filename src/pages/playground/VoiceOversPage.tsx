@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Play, RotateCcw, Loader2, X } from "lucide-react";
+import { Search, Play, RotateCcw, Loader2, X, Headphones, RotateCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,8 +39,13 @@ function useSpeechVoices() {
 
 export function VoiceOversPage() {
   const location = useLocation();
-  const scriptTitles = (location.state as { scriptTitles?: string[] } | null)?.scriptTitles;
-  const generateTotal = scriptTitles?.length ?? 3;
+  const scriptTitlesFromState = (location.state as { scriptTitles?: string[] } | null)?.scriptTitles;
+  const generateTotal = scriptTitlesFromState?.length ?? 3;
+  // Always have a list for sidebar: use state titles or placeholders so sidebar can show during generation
+  const scriptTitles = useMemo(
+    () => scriptTitlesFromState ?? Array.from({ length: generateTotal }, (_, i) => `Script ${i + 1}`),
+    [scriptTitlesFromState, generateTotal]
+  );
 
   const [search, setSearch] = useState("");
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
@@ -49,10 +54,13 @@ export function VoiceOversPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generateCurrent, setGenerateCurrent] = useState(0);
   const [generateComplete, setGenerateComplete] = useState(false);
+  const [generatedVoiceOvers, setGeneratedVoiceOvers] = useState<{ index: number; title: string; status: "ready" | "generating" | "regenerating" }[]>([]);
+  const [playingVoiceIndex, setPlayingVoiceIndex] = useState<number | null>(null);
   const browserVoices = useSpeechVoices();
 
   useEffect(() => {
     if (!showGenerateModal || generateComplete) return;
+    // Show first item immediately in sidebar
     setGenerateCurrent(1);
     const interval = setInterval(() => {
       setGenerateCurrent((c) => {
@@ -67,16 +75,69 @@ export function VoiceOversPage() {
     return () => clearInterval(interval);
   }, [showGenerateModal, generateTotal, generateComplete]);
 
+  // When generation completes, persist list for the right sidebar
+  useEffect(() => {
+    if (!generateComplete || !showGenerateModal || scriptTitles.length === 0) return;
+    setGeneratedVoiceOvers(
+      scriptTitles.map((title, index) => ({ index, title, status: "ready" as const }))
+    );
+  }, [generateComplete, showGenerateModal, scriptTitles]);
+
   const handleOpenGenerate = () => {
-    setShowGenerateModal(true);
+    setGeneratedVoiceOvers([]);
     setGenerateComplete(false);
-    setGenerateCurrent(0);
+    setGenerateCurrent(1); // show first item in sidebar immediately
+    setShowGenerateModal(true);
   };
 
   const handleCloseGenerate = () => {
     setShowGenerateModal(false);
     setGenerateComplete(false);
     setGenerateCurrent(0);
+  };
+
+  // Display list: during generation show progress one-by-one; after that show persisted list
+  const displayVoiceOvers = useMemo(() => {
+    if (showGenerateModal && !generateComplete && scriptTitles.length > 0) {
+      return scriptTitles.slice(0, generateCurrent).map((title, i) => ({
+        index: i,
+        title,
+        status: i === generateCurrent - 1 ? ("generating" as const) : ("ready" as const),
+      }));
+    }
+    return generatedVoiceOvers;
+  }, [showGenerateModal, generateComplete, generateCurrent, scriptTitles, generatedVoiceOvers]);
+
+  const playGeneratedVoice = (index: number) => {
+    speechSynthesis.cancel();
+    setPlayingVoiceIndex(index);
+    const title = scriptTitles?.[index] ?? displayVoiceOvers.find((v) => v.index === index)?.title ?? "Script";
+    const utterance = new SpeechSynthesisUtterance(`Voice over for: ${title}. This is a sample. Connect your TTS API for real audio.`);
+    utterance.rate = speed;
+    const voiceId = selectedVoiceId ?? VOICES[0].id;
+    const voice = VOICES.find((v) => v.id === voiceId);
+    if (voice) {
+      const isFemale = voice.tags.some((t) => t.toLowerCase() === "female");
+      const preferred = browserVoices.find((v) =>
+        isFemale ? v.name.toLowerCase().includes("female") || v.name.toLowerCase().includes("samantha") : v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("daniel")
+      );
+      if (preferred) utterance.voice = preferred;
+    }
+    utterance.onend = () => setPlayingVoiceIndex(null);
+    utterance.onerror = () => setPlayingVoiceIndex(null);
+    speechSynthesis.speak(utterance);
+  };
+
+  const regenerateVoiceOver = (index: number) => {
+    setGeneratedVoiceOvers((prev) => {
+      if (!prev.some((v) => v.index === index)) return prev;
+      return prev.map((item) => (item.index === index ? { ...item, status: "regenerating" as const } : item));
+    });
+    setTimeout(() => {
+      setGeneratedVoiceOvers((prev) =>
+        prev.map((item) => (item.index === index ? { ...item, status: "ready" as const } : item))
+      );
+    }, 1500);
   };
 
   const filteredVoices = useMemo(() => {
@@ -119,7 +180,7 @@ export function VoiceOversPage() {
 
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <div className="flex-1 min-w-0 flex flex-col overflow-auto">
-          <div className="p-8 space-y-6">
+          <div className="p-8 space-y-6 max-w-4xl">
             {/* Voice selection – section card like Script Writing */}
             <section className="rounded-xl border border-border bg-[#131922] p-6">
               <Label className="text-muted-foreground text-xs uppercase tracking-wider block mb-3">
@@ -247,18 +308,115 @@ export function VoiceOversPage() {
             </section>
           </div>
         </div>
+
+        {/* Right: Voice preview sidebar (same style as Topic headline preview) */}
+        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden hidden lg:flex">
+          <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-2">
+            <Headphones size={14} className="text-muted-foreground shrink-0" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Voice preview
+            </span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
+            {displayVoiceOvers.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-8 px-2">
+                Topic-by-topic voice overs will appear here. Click &quot;Generate Voice Overs&quot; to create them. Then play or regenerate each topic&apos;s voice from this list.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {displayVoiceOvers.map((item) => (
+                  <li
+                    key={item.index}
+                    className={cn(
+                      "rounded-lg border border-border/60 bg-[#131922] p-3 flex flex-col gap-2",
+                      (item.status === "generating" || item.status === "regenerating") && "ring-1 ring-primary/40"
+                    )}
+                  >
+                    <div className="flex items-start gap-2 min-w-0">
+                      <span
+                        className={cn(
+                          "shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold",
+                          "bg-[#1e3a5f] text-[#93c5fd] border border-[#2563eb]/30"
+                        )}
+                      >
+                        {item.index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Topic {item.index + 1}</p>
+                        <p className="text-sm font-medium text-foreground truncate mt-0.5">{item.title}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs flex-1 gap-1.5"
+                        disabled={item.status === "generating" || item.status === "regenerating"}
+                        onClick={() => playGeneratedVoice(item.index)}
+                      >
+                        {playingVoiceIndex === item.index ? (
+                          <Loader2 size={12} className="animate-spin shrink-0" />
+                        ) : (
+                          <Play size={12} className="shrink-0" />
+                        )}
+                        Play
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs shrink-0 gap-1"
+                        disabled={item.status === "generating" || item.status === "regenerating" || (showGenerateModal && !generateComplete)}
+                        onClick={() => regenerateVoiceOver(item.index)}
+                      >
+                        {item.status === "regenerating" ? (
+                          <Loader2 size={12} className="animate-spin shrink-0" />
+                        ) : (
+                          <RotateCw size={12} className="shrink-0" />
+                        )}
+                        Regenerate
+                      </Button>
+                    </div>
+                    {(item.status === "generating" || item.status === "regenerating") && (
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Loader2 size={10} className="animate-spin shrink-0" />
+                        {item.status === "generating" ? "Generating…" : "Regenerating…"}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </aside>
       </div>
 
-      {/* Bottom CTA */}
-      <div className="shrink-0 p-8 pt-4">
-        <Button
-          size="lg"
-          className="w-full h-12 font-semibold uppercase tracking-wider text-sm gap-2"
-          onClick={handleOpenGenerate}
-        >
-          Generate Voice Overs &gt;
-        </Button>
-      </div>
+      {/* Bottom: Generate button — show only until voice overs are generated; then hide */}
+      {generatedVoiceOvers.length === 0 && (
+        <div className="shrink-0 p-4 border-t border-border bg-background/30">
+          <Button
+            size="lg"
+            className="w-full h-11 font-medium gap-2 mb-3"
+            onClick={handleOpenGenerate}
+          >
+            Generate Voice Overs &gt;
+          </Button>
+        </div>
+      )}
+      {/* Compact bar: show only once voice overs are generated */}
+      {generatedVoiceOvers.length > 0 && (
+        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+          <span className="text-[11px] text-muted-foreground">
+            {generatedVoiceOvers.length} item{generatedVoiceOvers.length === 1 ? "" : "s"}
+          </span>
+          <Button asChild size="sm" variant="default" className="h-7 text-xs shrink-0">
+            <Link to="/playground/media-library">
+              Continue to Media Library
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {/* Generate voice overs popup – one by one progress */}
       {showGenerateModal &&
