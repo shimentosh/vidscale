@@ -102,7 +102,7 @@ export function ScriptPreviewPage() {
 
             {/* Inline AI Regenerate – one line, small */}
             {showRegenerateModal && (
-              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-[#131922]/80 px-3 py-2" role="region" aria-label="Regenerate script with AI">
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-2" role="region" aria-label="Regenerate script with AI">
                 <Sparkles size={16} className="text-primary shrink-0" />
                 <Input
                   id="regenerate-prompt-preview"
@@ -140,7 +140,7 @@ export function ScriptPreviewPage() {
             )}
 
             {/* Doc body */}
-            <div className="flex-1 min-h-[240px] flex flex-col rounded-lg border border-border bg-[#131922]/60 overflow-hidden">
+            <div className="flex-1 min-h-[240px] flex flex-col rounded-lg border border-border bg-card/60 overflow-hidden">
               <textarea
                 value={currentBody}
                 onChange={(e) =>
@@ -191,7 +191,7 @@ export function ScriptPreviewPage() {
         </div>
 
         {/* Script list sidebar */}
-        <aside className="w-96 min-w-[280px] shrink-0 border-l border-border bg-[#0D1117]/50 flex flex-col">
+        <aside className="w-96 min-w-[280px] shrink-0 border-l border-border bg-background/50 flex flex-col">
           <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-border">
             <GripVertical size={14} className="text-muted-foreground" aria-hidden />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

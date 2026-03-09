@@ -306,10 +306,10 @@ export function ScriptWritingPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="shrink-0 py-5 px-8 border-b border-border bg-[#0D1117]/40">
+      <div className="shrink-0 py-5 px-8 border-b border-border bg-background/40">
         <div className="max-w-5xl">
           <span className="text-xs font-medium text-muted-foreground">Step 2 · Script Writing</span>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1">Write your script</h1>
+          <h1 className="text-xl font-bold text-foreground tracking-tight mt-1">Write your script</h1>
           <p className="text-sm text-muted-foreground mt-1">Choose your topic, length, and structure. Then generate your script.</p>
         </div>
       </div>
@@ -353,7 +353,7 @@ export function ScriptWritingPage() {
                     "rounded-lg border px-4 py-3 flex items-center gap-3 text-left text-sm font-medium transition-colors w-full",
                     customPromptOpen
                       ? "border-primary bg-primary/15 text-primary"
-                      : "border-border bg-[#131922] text-foreground hover:border-muted-foreground/50 hover:bg-white/[0.02]"
+                      : "border-border bg-card text-foreground hover:border-muted-foreground/50 hover:bg-white/[0.02]"
                   )}
                 >
                   <MessageSquare size={20} className="shrink-0" />
@@ -366,7 +366,7 @@ export function ScriptWritingPage() {
                       "rounded-lg border px-4 py-3 flex items-center gap-3 text-left text-sm font-medium transition-colors w-full",
                       selectedNiche === label
                         ? "border-primary bg-primary/15 text-primary"
-                        : "border-border bg-[#131922] text-foreground hover:border-muted-foreground/50 hover:bg-white/[0.02]"
+                        : "border-border bg-card text-foreground hover:border-muted-foreground/50 hover:bg-white/[0.02]"
                     )}
                   >
                     <button
@@ -402,7 +402,7 @@ export function ScriptWritingPage() {
                 {showMoreNiches ? "Show less" : "Show more topics"}
               </Button>
               {customPromptOpen && (
-                <div className="rounded-lg border border-border bg-[#131922] p-4 mt-2">
+                <div className="rounded-lg border border-border bg-card p-4 mt-2">
                   <Label className="text-sm text-foreground block mb-2">Custom instructions</Label>
                   <textarea
                     value={customPrompt}
@@ -421,7 +421,7 @@ export function ScriptWritingPage() {
                 <h2 className="text-sm font-semibold text-foreground">Script length</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Total word count for the full script (~{WORDS_PER_MINUTE} words/min when spoken).</p>
               </div>
-              <div className="rounded-lg border border-border bg-[#131922]/80 p-5 space-y-4">
+              <div className="rounded-lg border border-border bg-card/80 p-5 space-y-4">
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
@@ -458,7 +458,7 @@ export function ScriptWritingPage() {
                 <h2 className="text-sm font-semibold text-foreground">Structure</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Include only the parts you need. Turn off any section to skip it.</p>
               </div>
-              <div className="rounded-lg border border-border bg-[#131922]/80 p-5 space-y-5">
+              <div className="rounded-lg border border-border bg-card/80 p-5 space-y-5">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-background/30 px-3 py-2.5">
                     <span className="text-sm">Hook</span>
@@ -546,7 +546,7 @@ export function ScriptWritingPage() {
         </div>
 
         {/* Right: Summary (same style as Topic headline preview sidebar) */}
-        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden hidden lg:flex">
+        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-card overflow-hidden hidden lg:flex">
           <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-2">
             <ScrollText size={14} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -556,7 +556,7 @@ export function ScriptWritingPage() {
           <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-5">
             <div className="space-y-4">
               {/* Duration big, word count small */}
-              <div className="rounded-lg border border-border/60 bg-[#131922] p-4">
+              <div className="rounded-lg border border-border/60 bg-card p-4">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Est. duration when spoken</p>
                 <p className="text-3xl font-bold tabular-nums text-primary leading-tight">
                   {formatDuration(durationEstimateSeconds)}
@@ -640,7 +640,7 @@ export function ScriptWritingPage() {
 
       {/* Bottom bar: only show once content is generated */}
       {Object.keys(scriptBodies).length > 0 && (
-        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-card">
           <span className="text-[11px] text-muted-foreground">
             {scriptTitlesLocal.length} item{scriptTitlesLocal.length === 1 ? "" : "s"}
           </span>
@@ -693,10 +693,10 @@ export function ScriptWritingPage() {
           >
             <div className="absolute inset-0 bg-black/60" onClick={() => setPreviewFor(null)} aria-hidden="true" />
             <div
-              className="relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-[#131922] shadow-xl overflow-hidden"
+              className="relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-card shadow-xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between gap-4 shrink-0 border-b border-border px-6 py-4 bg-[#0D1117]/80">
+              <div className="flex items-center justify-between gap-4 shrink-0 border-b border-border px-6 py-4 bg-background/80">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="flex shrink-0 items-center justify-center w-10 h-10 rounded-lg bg-primary/15 text-primary" aria-hidden>
                     <Eye size={22} strokeWidth={1.5} />
@@ -762,7 +762,7 @@ export function ScriptWritingPage() {
                   const sections = parseScriptSections(scriptBodies[activeScriptIndex] ?? "");
                   if (sections.length === 0) return null;
                   return (
-                    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-[#131922]/60 px-4 py-2.5">
+                    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/60 px-4 py-2.5">
                       <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">Structure</span>
                       {sections.map((name, i) => (
                         <span key={name} className="inline-flex items-center gap-1.5 text-xs">
@@ -776,7 +776,7 @@ export function ScriptWritingPage() {
 
                 {/* Inline AI Regenerate – one line, small */}
                 {showRegenerateModal && (
-                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-[#131922]/80 px-3 py-2" role="region" aria-label="Regenerate script with AI">
+                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-2" role="region" aria-label="Regenerate script with AI">
                     <Sparkles size={16} className="text-primary shrink-0" />
                     <Input
                       id="regenerate-prompt"
@@ -814,8 +814,8 @@ export function ScriptWritingPage() {
                 )}
 
                 {/* Script body – full script with clear sections */}
-                <div className="flex-1 min-h-[260px] flex flex-col rounded-lg border border-border bg-[#131922]/60 overflow-hidden">
-                  <div className="shrink-0 px-4 py-2 border-b border-border bg-[#0D1117]/40">
+                <div className="flex-1 min-h-[260px] flex flex-col rounded-lg border border-border bg-card/60 overflow-hidden">
+                  <div className="shrink-0 px-4 py-2 border-b border-border bg-background/40">
                     <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Full script</span>
                   </div>
                   <textarea
@@ -839,7 +839,7 @@ export function ScriptWritingPage() {
                   <Button variant="secondary" size="sm">Save script</Button>
                 </footer>
               </div>
-              <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+              <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-card">
                 <span className="text-[11px] text-muted-foreground">
                   {scriptTitlesLocal.length} item{scriptTitlesLocal.length === 1 ? "" : "s"}
                 </span>
@@ -850,7 +850,7 @@ export function ScriptWritingPage() {
                 </Button>
               </div>
             </div>
-            <aside className="w-96 min-w-[280px] shrink-0 border-l border-border bg-[#0D1117]/50 flex flex-col">
+            <aside className="w-96 min-w-[280px] shrink-0 border-l border-border bg-background/50 flex flex-col">
               <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-b border-border">
                 <GripVertical size={14} className="text-muted-foreground" aria-hidden />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">SCRIPT LIST</span>
@@ -894,7 +894,7 @@ export function ScriptWritingPage() {
           >
             <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
             <div
-              className="relative z-10 w-full max-w-md flex flex-col rounded-xl border border-border bg-[#131922] shadow-xl overflow-hidden p-6"
+              className="relative z-10 w-full max-w-md flex flex-col rounded-xl border border-border bg-card shadow-xl overflow-hidden p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-6">

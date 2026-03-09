@@ -5,6 +5,8 @@ export type BrandKit = {
   name: string;
   description?: string;
   primaryColor?: string;
+  /** Optional brand logo/icon image URL; if missing, card shows initial + primary color */
+  logoUrl?: string;
   createdAt: string;
 };
 
@@ -37,13 +39,14 @@ export function getBrandKitById(id: string): BrandKit | null {
   return kits.find((k) => k.id === id) ?? null;
 }
 
-export function saveBrandKit(input: { name: string; description?: string; primaryColor?: string }): BrandKit {
+export function saveBrandKit(input: { name: string; description?: string; primaryColor?: string; logoUrl?: string }): BrandKit {
   const kits = loadKits();
   const kit: BrandKit = {
     id: crypto.randomUUID(),
     name: input.name || "Untitled Brand Kit",
     description: input.description ?? undefined,
     primaryColor: input.primaryColor ?? undefined,
+    logoUrl: input.logoUrl ?? undefined,
     createdAt: new Date().toISOString(),
   };
   kits.push(kit);
@@ -53,7 +56,7 @@ export function saveBrandKit(input: { name: string; description?: string; primar
 
 export function updateBrandKit(
   id: string,
-  input: { name: string; description?: string; primaryColor?: string }
+  input: { name: string; description?: string; primaryColor?: string; logoUrl?: string }
 ): BrandKit | null {
   const kits = loadKits();
   const index = kits.findIndex((k) => k.id === id);
@@ -63,6 +66,7 @@ export function updateBrandKit(
     name: input.name?.trim() || "Untitled Brand Kit",
     description: input.description?.trim() || undefined,
     primaryColor: input.primaryColor ?? undefined,
+    logoUrl: input.logoUrl ?? undefined,
   };
   saveKits(kits);
   return kits[index];

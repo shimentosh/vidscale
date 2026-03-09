@@ -42,39 +42,40 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Light theme (default when .dark is not on html) – softer primary for readability */
 :root {
   --radius: 0.5rem;
-  --background: #0b0f19;
-  --foreground: #ffffff;
-  --card: #111620;
-  --card-foreground: #ffffff;
-  --popover: #111620;
-  --popover-foreground: #ffffff;
-  --primary: #00ff00;
-  --primary-foreground: #000000;
-  --secondary: #1b2333;
-  --secondary-foreground: #ffffff;
-  --muted: #1b2333;
-  --muted-foreground: #8b949e;
-  --accent: #1b2333;
-  --accent-foreground: #ffffff;
-  --destructive: #ff3333;
-  --border: #212c40;
-  --input: #151d2e;
-  --ring: #00ff00;
-  --chart-1: #00ff00;
-  --chart-2: #33ff33;
-  --chart-3: #66ff66;
-  --chart-4: #99ff99;
-  --chart-5: #ccffcc;
-  --sidebar: #0b0f19;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #00ff00;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #1b2333;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #212c40;
-  --sidebar-ring: #00ff00;
+  --background: #f5f6f8;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+  --secondary: #e2e8f0;
+  --secondary-foreground: #0f172a;
+  --muted: #e2e8f0;
+  --muted-foreground: #64748b;
+  --accent: #e2e8f0;
+  --accent-foreground: #0f172a;
+  --destructive: #dc2626;
+  --border: #cbd5e1;
+  --input: #e2e8f0;
+  --ring: #16a34a;
+  --chart-1: #16a34a;
+  --chart-2: #22c55e;
+  --chart-3: #4ade80;
+  --chart-4: #86efac;
+  --chart-5: #bbf7d0;
+  --sidebar: #f1f5f9;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #16a34a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #16a34a;
 }
 
 .dark {
@@ -114,12 +115,20 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body {
+    height: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
-    @apply bg-background text-foreground;
+  }
+
+  #root {
+    height: 100%;
+    min-height: 100%;
   }
 
   input[type="range"] {

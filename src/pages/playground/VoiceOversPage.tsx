@@ -174,7 +174,7 @@ export function VoiceOversPage() {
       {/* Header – same as Script Writing */}
       <div className="shrink-0 py-6 px-8 border-b border-border">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Step 3</span>
-        <h1 className="text-2xl font-bold text-white tracking-tight mt-1">Voice Overs</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight mt-1">Voice Overs</h1>
         <p className="text-sm text-muted-foreground mt-2">Record or generate voice-over for your script.</p>
       </div>
 
@@ -182,7 +182,7 @@ export function VoiceOversPage() {
         <div className="flex-1 min-w-0 flex flex-col overflow-auto">
           <div className="p-8 space-y-6 max-w-4xl">
             {/* Voice selection – section card like Script Writing */}
-            <section className="rounded-xl border border-border bg-[#131922] p-6">
+            <section className="rounded-xl border border-border bg-card p-6">
               <Label className="text-muted-foreground text-xs uppercase tracking-wider block mb-3">
                 Choose a voice for your videos
               </Label>
@@ -260,7 +260,7 @@ export function VoiceOversPage() {
             </section>
 
             {/* Speed – section card */}
-            <section className="rounded-xl border border-border bg-[#131922] p-6">
+            <section className="rounded-xl border border-border bg-card p-6">
               <Label className="text-muted-foreground text-xs uppercase tracking-wider block mb-3">Playback speed</Label>
               <div className="flex items-center justify-between gap-4 mb-3">
                 <span className="text-sm text-foreground">Speed</span>
@@ -310,7 +310,7 @@ export function VoiceOversPage() {
         </div>
 
         {/* Right: Voice preview sidebar (same style as Topic headline preview) */}
-        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden hidden lg:flex">
+        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-card overflow-hidden hidden lg:flex">
           <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-2">
             <Headphones size={14} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -328,7 +328,7 @@ export function VoiceOversPage() {
                   <li
                     key={item.index}
                     className={cn(
-                      "rounded-lg border border-border/60 bg-[#131922] p-3 flex flex-col gap-2",
+                      "rounded-lg border border-border/60 bg-card p-3 flex flex-col gap-2",
                       (item.status === "generating" || item.status === "regenerating") && "ring-1 ring-primary/40"
                     )}
                   >
@@ -406,7 +406,7 @@ export function VoiceOversPage() {
       )}
       {/* Compact bar: show only once voice overs are generated */}
       {generatedVoiceOvers.length > 0 && (
-        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+        <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-card">
           <span className="text-[11px] text-muted-foreground">
             {generatedVoiceOvers.length} item{generatedVoiceOvers.length === 1 ? "" : "s"}
           </span>
@@ -429,7 +429,7 @@ export function VoiceOversPage() {
           >
             <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
             <div
-              className="relative z-10 w-full max-w-md rounded-xl border border-border bg-[#131922] shadow-xl overflow-hidden p-6"
+              className="relative z-10 w-full max-w-md rounded-xl border border-border bg-card shadow-xl overflow-hidden p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">

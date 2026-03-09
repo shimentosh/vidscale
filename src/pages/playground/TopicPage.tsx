@@ -98,10 +98,10 @@ export function TopicPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header (same structure as Script Writing: step label, headline, description) */}
-      <div className="shrink-0 flex items-center justify-between py-5 px-8 border-b border-border bg-[#0D1117]/40">
+      <div className="shrink-0 flex items-center justify-between py-5 px-8 border-b border-border bg-background/40">
         <div className="max-w-5xl">
           <span className="text-xs font-medium text-muted-foreground">Step 1 · Topic</span>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1">Add your topics</h1>
+          <h1 className="text-xl font-bold text-foreground tracking-tight mt-1">Add your topics</h1>
           <p className="text-sm text-muted-foreground mt-1">Enter or import topics, or use AI to generate headlines. Edit in the preview sidebar, then continue to script writing.</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -163,7 +163,7 @@ export function TopicPage() {
             )}
           >
           <div className={cn("min-h-0 min-w-0")}>
-            <div className="flex flex-col min-h-0 rounded-xl border border-border bg-[#131922] p-6 transition-shadow hover:shadow-lg hover:shadow-black/10 h-full">
+            <div className="flex flex-col min-h-0 rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-lg hover:shadow-black/10 h-full">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
                   Topics Engine
@@ -212,7 +212,7 @@ export function TopicPage() {
           {showAiEngine && (
             <div
               id="ai-topic-engine"
-              className="flex flex-col min-h-0 rounded-xl border border-border bg-[#131922] p-6 animate-in fade-in slide-in-from-right-4 duration-300 lg:max-w-[360px]"
+              className="flex flex-col min-h-0 rounded-xl border border-border bg-card p-6 animate-in fade-in slide-in-from-right-4 duration-300 lg:max-w-[360px]"
               role="region"
               aria-label="AI Topic Engine"
             >
@@ -292,7 +292,7 @@ export function TopicPage() {
         </div>
 
         {/* Right: Headline preview — editable list (same function/design as former Review & Edit Topics) */}
-        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden">
+        <aside className="w-[320px] min-w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-card overflow-hidden">
           <div className="shrink-0 px-4 py-3 border-b border-border/60 flex items-center gap-2">
             <FileText size={14} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -323,7 +323,7 @@ export function TopicPage() {
                       value={line}
                       onChange={(e) => updateTopicAt(index, e.target.value)}
                       placeholder={`Topic ${index + 1}`}
-                      className="flex-1 min-w-0 bg-[#131922] border-border text-sm"
+                      className="flex-1 min-w-0 bg-card border-border text-sm"
                       aria-label={`Topic ${index + 1}`}
                     />
                     <Button
@@ -359,7 +359,7 @@ export function TopicPage() {
       </div>
 
       {/* Bottom bar: item count + continue (same style as other steps) */}
-      <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+      <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-card">
         <span className="text-[11px] text-muted-foreground">
           {topicCount} item{topicCount === 1 ? "" : "s"}
         </span>

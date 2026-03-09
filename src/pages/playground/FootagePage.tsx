@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { AVAILABLE_FOLDERS } from "./constants";
 
-type MergeStrategy = "random" | "ai-auto" | "serially" | "color-style" | "keyword-based";
+type MergeStrategy = "ai-auto" | "serially" | "color-style" | "keyword-based";
 type FillMode = "one-clip" | "multi-clip" | "loop";
 type SelectedItem = { id: string; name: string; type: "folder" | "file" | "import"; itemCount?: number };
 
@@ -58,11 +58,12 @@ const MERGE_RULES: { title: string; description: string }[] = [
   { title: "Loop settings", description: "Control how footage clips repeat to fill your video length or segment duration." },
 ];
 
-type TransitionMode = "single" | "random" | "serial";
+type TransitionMode = "single" | "random" | "serial" | "multiple";
 const TRANSITION_MODES: { value: TransitionMode; label: string }[] = [
   { value: "single", label: "Single" },
   { value: "random", label: "Random" },
   { value: "serial", label: "Serial" },
+  { value: "multiple", label: "Multiple" },
 ];
 
 const TRANSITION_TYPES = [
@@ -89,12 +90,19 @@ export function FootagePage() {
   const [fillMode, setFillMode] = useState<FillMode>("multi-clip");
   const [loopMode, setLoopMode] = useState<"fixed-times" | "play-then-reverse">("fixed-times");
   const [loopTimes, setLoopTimes] = useState(2);
-  const [serialOrder, setSerialOrder] = useState<"from-start" | "from-end">("from-start");
+  const [serialOrder, setSerialOrder] = useState<"from-start" | "from-end" | "random">("from-start");
 
   const [transitionOn, setTransitionOn] = useState(false);
   const [transitionMode, setTransitionMode] = useState<TransitionMode>("single");
   const [transitionType, setTransitionType] = useState<string>(TRANSITION_TYPES[0]);
   const [transitionDuration, setTransitionDuration] = useState(0.5);
+  const [transitionTypesMultiple, setTransitionTypesMultiple] = useState<string[]>([TRANSITION_TYPES[0]]);
+
+  const toggleTransitionTypeMultiple = (type: string) => {
+    setTransitionTypesMultiple((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
 
   const setRuleEnabled = (title: string, enabled: boolean) => {
     setMergeRuleEnabled((prev) => ({ ...prev, [title]: enabled }));
@@ -156,9 +164,9 @@ export function FootagePage() {
   const removeItem = (id: string) => setLibraryItems((prev) => prev.filter((i) => i.id !== id));
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#0D1117]">
+    <div className="flex flex-col h-full min-h-0 bg-background">
       {/* Toolbar – clean bar with breadcrumb */}
-      <div className="shrink-0 h-12 px-5 flex items-center gap-3 border-b border-border/80 bg-[#161B22]">
+      <div className="shrink-0 h-12 px-5 flex items-center gap-3 border-b border-border/80 bg-card">
         <div className="flex items-center gap-2 min-w-0 shrink-0">
           <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Step 4</span>
           <ChevronRight size={14} className="text-muted-foreground/50" aria-hidden />
@@ -194,7 +202,7 @@ export function FootagePage() {
 
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Left: Library panel – file-manager style */}
-        <aside className="w-[220px] min-w-[200px] shrink-0 flex flex-col border-r border-border/80 bg-[#161B22]">
+        <aside className="w-[220px] min-w-[200px] shrink-0 flex flex-col border-r border-border/80 bg-card">
           <div className="shrink-0 px-3 py-3 border-b border-border/60">
             <div className="flex items-center gap-2">
               <FolderOpen size={14} className="text-muted-foreground shrink-0" />
@@ -233,7 +241,7 @@ export function FootagePage() {
         </aside>
 
             {/* Center: empty / info (desktop app main area) */}
-        <main className="flex-1 min-w-0 flex flex-col items-center justify-center p-8 bg-[#0D1117]">
+        <main className="flex-1 min-w-0 flex flex-col items-center justify-center p-8 bg-background">
           <p className="text-[13px] text-muted-foreground text-center max-w-sm">
             Select folders in the library. Configure fill mode and merge rules in the Properties panel.
           </p>
@@ -241,7 +249,7 @@ export function FootagePage() {
         </main>
 
         {/* Right: Properties panel – desktop inspector style */}
-        <aside className="w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-[#161B22] overflow-hidden">
+        <aside className="w-[320px] shrink-0 flex flex-col border-l border-border/80 bg-card overflow-hidden">
           <div className="shrink-0 px-3 py-2 border-b border-border/60 flex items-center gap-2">
             <Settings2 size={14} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Properties</span>
@@ -283,7 +291,7 @@ export function FootagePage() {
                     key={value}
                     className={cn(
                       "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                      fillMode === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
+                      fillMode === value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
                     )}
                   >
                     <input
@@ -292,7 +300,7 @@ export function FootagePage() {
                       value={value}
                       checked={fillMode === value}
                       onChange={() => setFillMode(value)}
-                      className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
+                      className="h-3.5 w-3.5 shrink-0 accent-primary border-border bg-background focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
                     />
                     <span className="flex-1 min-w-0">{label}</span>
                     <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">{hint}</span>
@@ -309,7 +317,7 @@ export function FootagePage() {
                         key={mode}
                         className={cn(
                           "flex items-center gap-2 rounded px-1.5 py-1 cursor-pointer text-[12px]",
-                          loopMode === mode ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
+                          loopMode === mode ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
                         )}
                       >
                         <input
@@ -318,41 +326,69 @@ export function FootagePage() {
                           value={mode}
                           checked={loopMode === mode}
                           onChange={() => setLoopMode(mode)}
-                          className="h-3 w-3 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
+                          className="h-3 w-3 shrink-0 accent-primary border-border bg-background focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
                         />
-                        {mode === "fixed-times" ? "Fixed times" : "Play + reverse"}
+                        {mode === "fixed-times" ? "Infinite" : "Play + reverse"}
                       </label>
                     ))}
                   </div>
-                  {loopMode === "fixed-times" && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <Input
-                        type="number"
-                        min={1}
-                        max={99}
-                        value={loopTimes}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          if (!Number.isNaN(v)) setLoopTimes(Math.min(99, Math.max(1, Math.round(v))));
-                        }}
-                        className="w-14 h-7 text-xs tabular-nums"
-                      />
-                      <span className="text-[11px] text-muted-foreground">times</span>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
 
-            {/* Merge strategy – compact list */}
+            {/* Merge strategy – In order first, then Order subsection, then Random and rest */}
             <div>
               <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-2">Merge strategy</Label>
               <div className="space-y-1">
+                {/* In order (one after another) – first */}
+                <label
+                  className={cn(
+                    "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
+                    mergeStrategy === "serially" ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="merge-strategy"
+                    value="serially"
+                    checked={mergeStrategy === "serially"}
+                    onChange={() => setMergeStrategy("serially")}
+                    className="h-3.5 w-3.5 shrink-0 accent-primary border-border bg-background focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
+                  />
+                  In order (one after another)
+                </label>
+                {/* Order – under In order: segmented control (one bar, three segments) */}
+                {mergeStrategy === "serially" && (
+                  <div className="ml-5 mt-1.5">
+                    <div className="flex rounded-md border border-border/80 overflow-hidden bg-muted/30">
+                      {(
+                        [
+                          { value: "from-start" as const, label: "From start" },
+                          { value: "from-end" as const, label: "From end" },
+                          { value: "random" as const, label: "Random" },
+                        ] as const
+                      ).map(({ value, label }, i) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setSerialOrder(value)}
+                          className={cn(
+                            "flex-1 min-w-0 py-1.5 px-2 text-[11px] font-medium transition-colors border-r border-border/60 last:border-r-0",
+                            serialOrder === value
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:bg-white/20 hover:text-foreground"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Rest of merge strategies */}
                 {(
                   [
-                    { value: "random" as const, label: "Random" },
                     { value: "ai-auto" as const, label: "AI Auto Clip Match" },
-                    { value: "serially" as const, label: "In order (one after another)" },
                     { value: "color-style" as const, label: "AI Color style" },
                     { value: "keyword-based" as const, label: "Keyword" },
                   ] as const
@@ -361,7 +397,7 @@ export function FootagePage() {
                     key={value}
                     className={cn(
                       "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                      mergeStrategy === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
+                      mergeStrategy === value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
                     )}
                   >
                     <input
@@ -370,54 +406,12 @@ export function FootagePage() {
                       value={value}
                       checked={mergeStrategy === value}
                       onChange={() => setMergeStrategy(value)}
-                      className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
+                      className="h-3.5 w-3.5 shrink-0 accent-primary border-border bg-background focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
                     />
                     {label}
                   </label>
                 ))}
               </div>
-              {/* Serial order – when Serial is selected */}
-              {mergeStrategy === "serially" && (
-                <div className="mt-2 pt-2 border-t border-border/60 space-y-2">
-                  <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Order</Label>
-                  <div className="space-y-1">
-                    <label
-                      className={cn(
-                        "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                        serialOrder === "from-start" ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="serial-order"
-                        value="from-start"
-                        checked={serialOrder === "from-start"}
-                        onChange={() => setSerialOrder("from-start")}
-                        className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
-                      />
-                      <span className="flex-1 min-w-0">From start</span>
-                      <span className="text-[10px] text-muted-foreground">First clip first, then next</span>
-                    </label>
-                    <label
-                      className={cn(
-                        "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                        serialOrder === "from-end" ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="serial-order"
-                        value="from-end"
-                        checked={serialOrder === "from-end"}
-                        onChange={() => setSerialOrder("from-end")}
-                        className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
-                      />
-                      <span className="flex-1 min-w-0">From end</span>
-                      <span className="text-[10px] text-muted-foreground">Last clip first, then previous</span>
-                    </label>
-                  </div>
-                </div>
-              )}
             </div>
 
                 {mergeStrategy === "color-style" && (
@@ -494,7 +488,7 @@ export function FootagePage() {
                           key={value}
                           className={cn(
                             "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[13px]",
-                            transitionMode === value ? "bg-sky-500/10 text-sky-300" : "text-foreground hover:bg-white/5"
+                            transitionMode === value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
                           )}
                         >
                           <input
@@ -503,7 +497,7 @@ export function FootagePage() {
                             value={value}
                             checked={transitionMode === value}
                             onChange={() => setTransitionMode(value)}
-                            className="h-3.5 w-3.5 shrink-0 accent-sky-400 border-border bg-background focus:ring-2 focus:ring-sky-400/25 focus:ring-offset-0"
+                            className="h-3.5 w-3.5 shrink-0 accent-primary border-border bg-background focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
                             />
                             {label}
                           </label>
@@ -511,41 +505,72 @@ export function FootagePage() {
                       </div>
                     </div>
 
-                    <div>
-                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Type</Label>
-                    <Select value={transitionType} onValueChange={setTransitionType}>
-                      <SelectTrigger className="h-8 text-xs w-full">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TRANSITION_TYPES.map((type) => (
-                          <SelectItem key={type} value={type} className="text-xs">
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Duration</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min={0.1}
-                        max={5}
-                        step={0.1}
-                        value={transitionDuration}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          if (!Number.isNaN(v)) setTransitionDuration(Math.min(5, Math.max(0.1, v)));
-                        }}
-                        className="w-16 h-8 text-xs tabular-nums"
-                        aria-label="Transition duration in seconds"
-                      />
-                      <span className="text-[11px] text-muted-foreground">sec</span>
-                    </div>
-                  </div>
+                    {transitionMode === "multiple" ? (
+                      <>
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Types (select multiple)</Label>
+                          <div className="max-h-[180px] overflow-y-auto space-y-0.5 rounded border border-border/60 bg-background/30 p-1.5">
+                            {TRANSITION_TYPES.map((type) => (
+                              <label
+                                key={type}
+                                className={cn(
+                                  "flex items-center gap-2 rounded px-2 py-1.5 cursor-pointer text-[12px]",
+                                  transitionTypesMultiple.includes(type) ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/5"
+                                )}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={transitionTypesMultiple.includes(type)}
+                                  onChange={() => toggleTransitionTypeMultiple(type)}
+                                  className="h-3.5 w-3.5 shrink-0 rounded border-border accent-primary focus:ring-2 focus:ring-primary/25 focus:ring-offset-0"
+                                />
+                                {type}
+                              </label>
+                            ))}
+                          </div>
+                          {transitionTypesMultiple.length === 0 && (
+                            <p className="text-[11px] text-muted-foreground mt-1">Select at least one type</p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Type</Label>
+                          <Select value={transitionType} onValueChange={setTransitionType}>
+                            <SelectTrigger className="h-8 text-xs w-full">
+                              <SelectValue placeholder="Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TRANSITION_TYPES.map((type) => (
+                                <SelectItem key={type} value={type} className="text-xs">
+                                  {type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium block mb-1.5">Transition Duration</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={0.1}
+                              max={5}
+                              step={0.1}
+                              value={transitionDuration}
+                              onChange={(e) => {
+                                const v = Number(e.target.value);
+                                if (!Number.isNaN(v)) setTransitionDuration(Math.min(5, Math.max(0.1, v)));
+                              }}
+                              className="w-16 h-8 text-xs tabular-nums"
+                              aria-label="Transition duration in seconds"
+                            />
+                            <span className="text-[11px] text-muted-foreground">sec</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                 </>
               )}
             </div>
@@ -586,7 +611,7 @@ export function FootagePage() {
       </div>
 
       {/* Status bar + action – desktop style */}
-      <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-[#161B22]">
+      <div className="shrink-0 h-9 px-4 flex items-center justify-between border-t border-border/80 bg-card">
         <span className="text-[11px] text-muted-foreground">{libraryItems.length} item{libraryItems.length !== 1 ? "s" : ""}</span>
         <Button size="sm" className="h-7 text-xs px-4" asChild>
           <Link to="/playground/overlays">Continue to Overlays</Link>

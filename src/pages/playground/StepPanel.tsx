@@ -12,7 +12,7 @@ export function StepPanel({ step, title, description, children }: StepPanelProps
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Step {step}
         </span>
-        <h1 className="text-2xl font-bold text-white tracking-tight mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight mt-1">
           {title}
         </h1>
         {description && (
@@ -20,7 +20,7 @@ export function StepPanel({ step, title, description, children }: StepPanelProps
         )}
       </div>
       {children ?? (
-        <div className="rounded-lg border border-border bg-[#131922]/50 p-8 text-center text-muted-foreground/70 text-sm">
+        <div className="rounded-lg border border-border bg-card/50 p-8 text-center text-muted-foreground/70 text-sm">
           Content for this step will go here.
         </div>
       )}

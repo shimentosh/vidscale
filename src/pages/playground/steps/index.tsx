@@ -1,9 +1,12 @@
-import { StepPanel } from "../StepPanel";
 import { TopicPage } from "../TopicPage";
 import { ScriptWritingPage } from "../ScriptWritingPage";
 import { VoiceOversPage } from "../VoiceOversPage";
 import { FootagePage } from "../FootagePage";
-import { BrandingPage } from "../BrandingPage";
+import { OverlaysPage } from "../OverlaysPage";
+import { SubtitlePage } from "../SubtitlePage";
+import { AudioPage } from "../AudioPage";
+import { BrandKitPage } from "../BrandKitPage";
+import { ExportPage } from "../ExportPage";
 
 export function StepTopic() {
   return <TopicPage />;
@@ -22,35 +25,21 @@ export function StepFootage() {
 }
 
 export function StepOverlays() {
-  return (
-    <StepPanel
-      step={5}
-      title="Overlays"
-      description="Add graphics, text, and overlay elements."
-    />
-  );
+  return <OverlaysPage />;
 }
 
 export function StepSubtitle() {
-  return (
-    <StepPanel
-      step={6}
-      title="Subtitle"
-      description="Add and style subtitles or captions."
-    />
-  );
+  return <SubtitlePage />;
 }
 
 export function StepAudio() {
-  return (
-    <StepPanel
-      step={7}
-      title="Audio"
-      description="Background music and sound design."
-    />
-  );
+  return <AudioPage />;
 }
 
-export function StepWatermark() {
-  return <BrandingPage />;
+export function StepBrandKit() {
+  return <BrandKitPage />;
+}
+
+export function StepExport() {
+  return <ExportPage />;
 }

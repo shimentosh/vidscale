@@ -6,7 +6,6 @@ import {
   Type,
   Megaphone,
   Film,
-  FileText,
   Upload,
   Lightbulb,
   Briefcase,
@@ -126,21 +125,12 @@ function getCtaAssetPreviewStyle(
   }
 }
 
-const CAPTION_THEMES = [
-  "Highlight", "HORMOZI 1", "ali", "NOAH", "DEVIN", "Elegant", "Reveal", "Shimmy",
-  "cRay", "Cursor", "MR BEAST 1", "DAVID", "HORMOZI 2", "MR BEAST 2", "Iman", "DHRUV", "Flash", "Cyberpunk", "Custom",
-] as const;
-
-const CAPTION_FONT_SIZES = [60, 70, 80, 90, 100, 110, 120] as const;
-const CAPTION_TEXT_CASES = ["Default", "Uppercase", "Lowercase", "Title case"] as const;
-
 const TABS = [
   { id: "logos", label: "Logos", icon: Image },
   { id: "colors", label: "Colors", icon: Palette },
   { id: "fonts", label: "Fonts", icon: Type },
   { id: "cta", label: "CTA", icon: Megaphone },
   { id: "intro-outro", label: "Intro/Outro", icon: Film },
-  { id: "caption-style", label: "Caption Style", icon: FileText },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -187,8 +177,6 @@ export function CreateBrandKitPage() {
 
   const [headingFont, setHeadingFont] = useState<string>("Montserrat");
   const [headingWeight, setHeadingWeight] = useState<string>("Bold");
-  const [captionFont, setCaptionFont] = useState<string>("Montserrat");
-  const [captionWeight, setCaptionWeight] = useState<string>("Bold");
 
   const [ctaText, setCtaText] = useState<string>("Follow for more!");
   const [ctaPosition, setCtaPosition] = useState<string>("Bottom Center");
@@ -221,12 +209,6 @@ export function CreateBrandKitPage() {
   const introClipRef = useRef<HTMLInputElement>(null);
   const outroClipRef = useRef<HTMLInputElement>(null);
 
-  const [captionTheme, setCaptionTheme] = useState<string>("Highlight");
-  const [captionFontSize, setCaptionFontSize] = useState(80);
-  const [captionTextColor, setCaptionTextColor] = useState("#FFFFFF");
-  const [captionHighlightColor, setCaptionHighlightColor] = useState("#FFFF00");
-  const [captionTextCase, setCaptionTextCase] = useState<string>("Default");
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -243,11 +225,11 @@ export function CreateBrandKitPage() {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-gradient-to-b from-[#0D1117] via-[#0D1117] to-[#0a0e14]">
+    <div className="flex flex-col h-full min-h-0 bg-gradient-to-b from-background via-background to-background">
       {/* Toolbar */}
-      <div className="shrink-0 h-12 px-5 flex items-center justify-between gap-3 border-b border-border/80 bg-[#161B22]/95 backdrop-blur-sm shadow-sm">
+      <div className="shrink-0 h-12 px-5 flex items-center justify-between gap-3 border-b border-border/80 bg-card/95 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm rounded-md px-2 py-1.5 -ml-2 hover:bg-white/5">
+          <Link to="/brand-kits" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm rounded-md px-2 py-1.5 -ml-2 hover:bg-white/5">
             <ChevronLeft size={18} />
             Back
           </Link>
@@ -256,7 +238,7 @@ export function CreateBrandKitPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" asChild className="h-9 rounded-lg px-4 text-sm border-border/80 hover:bg-white/5">
-            <Link to="/">Cancel</Link>
+            <Link to="/brand-kits">Cancel</Link>
           </Button>
           <Button type="submit" form="create-brand-kit-form" className="gap-2 h-9 rounded-lg px-5 text-sm shadow-sm" size="sm">
             <Briefcase size={16} />
@@ -267,10 +249,7 @@ export function CreateBrandKitPage() {
 
       <form id="create-brand-kit-form" onSubmit={handleSubmit} className="flex-1 min-h-0 flex overflow-hidden">
         {/* Left: Section list – PC app style */}
-        <aside className="w-56 shrink-0 flex flex-col border-r border-border/80 bg-[#161B22]/90">
-          <div className="px-4 py-3.5 border-b border-border/60">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Sections</span>
-          </div>
+        <aside className="w-56 shrink-0 flex flex-col border-r border-border/80 bg-card/90">
           <nav className="flex-1 min-h-0 overflow-y-auto py-3 px-2 space-y-0.5">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
@@ -293,10 +272,10 @@ export function CreateBrandKitPage() {
 
         {/* Main: Basic Info + active section content */}
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <div className="max-w-5xl p-6 space-y-8 min-h-full">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+            <div className="max-w-5xl p-6 pb-10 space-y-8">
               {/* Basic Info – always visible at top */}
-              <section className="rounded-xl border border-border/70 bg-[#161B22]/60 shadow-sm p-6">
+              <section className="rounded-xl border border-border/70 bg-card/60 shadow-sm p-6">
                 <h2 className="text-base font-semibold text-foreground tracking-tight mb-1">Basic Info</h2>
                 <p className="text-xs text-muted-foreground mb-5">Name and describe this brand kit.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -324,7 +303,7 @@ export function CreateBrandKitPage() {
               </section>
 
               {/* Active section content */}
-              <section className="rounded-xl border border-border/70 bg-[#161B22]/60 shadow-sm p-6">
+              <section className="rounded-xl border border-border/70 bg-card/60 shadow-sm p-6">
                 {activeTab === "logos" && (
                   <>
                     <h2 className="text-base font-semibold text-foreground tracking-tight mb-4">Logo Assets</h2>
@@ -334,7 +313,7 @@ export function CreateBrandKitPage() {
                       <div className="lg:col-span-1 space-y-2 flex flex-col items-center">
                         <div className="flex items-center justify-between gap-2 w-full">
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live preview</p>
-                          <div className="flex rounded-md border border-border bg-[#0D1117] p-0.5">
+                          <div className="flex rounded-md border border-border bg-background p-0.5">
                             <button
                               type="button"
                               onClick={() => setLogoPreviewAspect("16/9")}
@@ -588,55 +567,6 @@ export function CreateBrandKitPage() {
                       {PREVIEW_PHRASE}
                     </p>
                   </div>
-
-                  {/* Caption Font */}
-                  <div className="space-y-4 rounded-xl border border-border/60 bg-white/[0.02] p-5">
-                    <h4 className="text-sm font-medium text-foreground">Caption Font</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Used for video captions and subtitles.
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Font Family</Label>
-                        <Select value={captionFont} onValueChange={setCaptionFont}>
-                          <SelectTrigger className="w-[180px] bg-background/50 border-border">
-                            <SelectValue placeholder="Select font" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {FONT_FAMILIES.map((font) => (
-                              <SelectItem key={font} value={font}>
-                                {font}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground text-xs">Font Weight</Label>
-                        <Select value={captionWeight} onValueChange={setCaptionWeight}>
-                          <SelectTrigger className="w-[120px] bg-background/50 border-border">
-                            <SelectValue placeholder="Weight" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {FONT_WEIGHTS.map((w) => (
-                              <SelectItem key={w} value={w}>
-                                {w}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <p
-                      className="text-lg text-foreground pt-2"
-                      style={{
-                        fontFamily: captionFont,
-                        fontWeight: captionWeight === "Light" ? 300 : captionWeight === "Regular" ? 400 : captionWeight === "Medium" ? 500 : captionWeight === "SemiBold" ? 600 : 700,
-                      }}
-                    >
-                      {PREVIEW_PHRASE}
-                    </p>
-                  </div>
                   </div>
                 )}
                 {activeTab === "cta" && (
@@ -644,16 +574,16 @@ export function CreateBrandKitPage() {
                     <h2 className="text-base font-semibold text-foreground tracking-tight mb-1">Call to Action (CTA)</h2>
                     <p className="text-xs text-muted-foreground mb-4">Set your default CTA text and styling for videos.</p>
 
-                    {/* Two options: Upload video/images | Custom */}
-                    <div className="flex gap-3">
+                    {/* Two options: Upload video/images | Custom — clear segmented control */}
+                    <div className="flex rounded-xl border border-border bg-muted/50 p-1 gap-0">
                       <button
                         type="button"
                         onClick={() => setCtaType("upload")}
                         className={cn(
-                          "flex-1 rounded-xl border px-4 py-3.5 text-sm font-medium transition-all",
+                          "flex-1 rounded-lg px-4 py-3.5 text-sm font-semibold transition-all",
                           ctaType === "upload"
-                            ? "border-primary bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
-                            : "border-border/70 bg-white/[0.02] text-muted-foreground hover:bg-white/5 hover:text-foreground hover:border-border"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-transparent text-foreground hover:bg-muted/80"
                         )}
                       >
                         Upload video or images
@@ -662,10 +592,10 @@ export function CreateBrandKitPage() {
                         type="button"
                         onClick={() => setCtaType("custom")}
                         className={cn(
-                          "flex-1 rounded-xl border px-4 py-3.5 text-sm font-medium transition-all",
+                          "flex-1 rounded-lg px-4 py-3.5 text-sm font-semibold transition-all",
                           ctaType === "custom"
-                            ? "border-primary bg-primary/15 text-primary shadow-sm ring-1 ring-primary/20"
-                            : "border-border/70 bg-white/[0.02] text-muted-foreground hover:bg-white/5 hover:text-foreground hover:border-border"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-transparent text-foreground hover:bg-muted/80"
                         )}
                       >
                         Custom
@@ -677,7 +607,7 @@ export function CreateBrandKitPage() {
                     <div className="lg:col-span-1 space-y-3 flex flex-col items-center">
                       <div className="flex items-center justify-between gap-2 w-full">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live preview</p>
-                        <div className="flex rounded-md border border-border bg-[#0D1117] p-0.5">
+                        <div className="flex rounded-md border border-border bg-background p-0.5">
                           <button
                             type="button"
                             onClick={() => setCtaPreviewAspect("16/9")}
@@ -1084,106 +1014,7 @@ export function CreateBrandKitPage() {
                   </div>
                   </div>
                 )}
-                {activeTab === "caption-style" && (
-                  <div className="space-y-6">
-                    <h2 className="text-base font-semibold text-foreground tracking-tight mb-1">Caption Style</h2>
-                    <p className="text-xs text-muted-foreground mb-4">Configure your default caption appearance for videos.</p>
-
-                  {/* Caption Theme */}
-                  <div>
-                    <h4 className="text-sm font-medium text-foreground mb-3">Caption Theme</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {CAPTION_THEMES.map((theme) => (
-                        <button
-                          key={theme}
-                          type="button"
-                          onClick={() => setCaptionTheme(theme)}
-                          className={cn(
-                            "rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors",
-                            captionTheme === theme
-                              ? "border-primary bg-primary/15 text-primary"
-                              : "border-border bg-input/20 text-foreground hover:bg-white/5"
-                          )}
-                        >
-                          {theme}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Font Size */}
-                  <div>
-                    <h4 className="text-sm font-medium text-foreground mb-3">Font Size</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {CAPTION_FONT_SIZES.map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setCaptionFontSize(size)}
-                          className={cn(
-                            "rounded-lg border px-4 py-2 text-sm font-medium tabular-nums transition-colors",
-                            captionFontSize === size
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-input/20 text-foreground hover:bg-white/5"
-                          )}
-                        >
-                          {size}px
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Text Color, Highlight Color, Text Case */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground text-xs">Text Color</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={captionTextColor}
-                          onChange={(e) => setCaptionTextColor(e.target.value)}
-                          className="w-10 h-9 rounded border border-border cursor-pointer bg-transparent"
-                        />
-                        <Input
-                          value={captionTextColor}
-                          onChange={(e) => setCaptionTextColor(e.target.value)}
-                          className="font-mono text-sm flex-1 bg-background/50 border-border"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground text-xs">Highlight Color</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={captionHighlightColor}
-                          onChange={(e) => setCaptionHighlightColor(e.target.value)}
-                          className="w-10 h-9 rounded border border-border cursor-pointer bg-transparent"
-                        />
-                        <Input
-                          value={captionHighlightColor}
-                          onChange={(e) => setCaptionHighlightColor(e.target.value)}
-                          className="font-mono text-sm flex-1 bg-background/50 border-border"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground text-xs">Text Case</Label>
-                      <Select value={captionTextCase} onValueChange={setCaptionTextCase}>
-                        <SelectTrigger className="w-full bg-background/50 border-border">
-                          <SelectValue placeholder="Case" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CAPTION_TEXT_CASES.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab !== "logos" && activeTab !== "colors" && activeTab !== "fonts" && activeTab !== "cta" && activeTab !== "intro-outro" && activeTab !== "caption-style" && (
+              {activeTab !== "logos" && activeTab !== "colors" && activeTab !== "fonts" && activeTab !== "cta" && activeTab !== "intro-outro" && (
                   <p className="text-sm text-muted-foreground py-4">Select a section from the left.</p>
                 )}
               </section>

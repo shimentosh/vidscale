@@ -13,7 +13,7 @@ export function SettingsGeneral() {
   return (
     <div className="py-10 px-8 max-w-2xl">
       <div className="mb-10">
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           General
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -22,9 +22,9 @@ export function SettingsGeneral() {
       </div>
 
       <div className="space-y-8">
-        <Card className="bg-[#131922] border-border">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-white">Preferences</CardTitle>
+            <CardTitle className="text-foreground">Preferences</CardTitle>
             <CardDescription>
               Theme and notification settings.
             </CardDescription>
@@ -56,9 +56,9 @@ export function SettingsGeneral() {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#131922] border-border">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-white">Account</CardTitle>
+            <CardTitle className="text-foreground">Account</CardTitle>
             <CardDescription>
               Your profile and account details.
             </CardDescription>

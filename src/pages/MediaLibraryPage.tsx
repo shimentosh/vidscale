@@ -54,13 +54,13 @@ export function MediaLibraryPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="shrink-0 py-6 px-8 border-b border-border">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Media Library</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Media Library</h1>
         <p className="text-sm text-muted-foreground mt-2">Manage your media: folders, uploads, and footage in one place.</p>
       </div>
 
       <div className="flex-1 overflow-auto">
         <div className="p-8 max-w-4xl">
-          <section className="rounded-xl border border-border bg-[#131922] p-6">
+          <section className="rounded-xl border border-border bg-card p-6">
             <div className="flex items-center gap-2 mb-2">
               <FolderSearch size={20} className="text-muted-foreground shrink-0" />
               <Label className="text-muted-foreground text-xs uppercase tracking-wider font-medium">

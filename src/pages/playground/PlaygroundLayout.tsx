@@ -9,13 +9,14 @@ const STEPS = [
   { step: 5, path: "overlays", label: "Overlays" },
   { step: 6, path: "subtitle", label: "Subtitle" },
   { step: 7, path: "audio", label: "Audio" },
-  { step: 8, path: "branding", label: "Branding" },
+  { step: 8, path: "brand-kit", label: "Brand Kit" },
+  { step: 9, path: "export", label: "Export" },
 ];
 
 export function PlaygroundLayout() {
   return (
     <div className="flex w-full h-full min-h-0">
-      <aside className="w-[200px] min-w-[200px] shrink-0 flex flex-col border-r border-border bg-[#0D1117]">
+      <aside className="w-[200px] min-w-[200px] shrink-0 flex flex-col border-r border-border bg-background">
         <div className="shrink-0 px-4 pt-5 pb-3 border-b border-border">
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Steps
