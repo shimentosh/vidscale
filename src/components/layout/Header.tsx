@@ -178,10 +178,12 @@ export function Header() {
                         <div className="absolute right-0 top-full z-50 mt-1.5 min-w-[240px] rounded-lg border border-border bg-card py-1 shadow-lg">
                             {NEW_PROJECT_OPTIONS.map((opt) => {
                                 const Icon = opt.icon;
+                                const isAiEditor = opt.to === "/ai-editor";
                                 return (
                                     <Link
                                         key={opt.to}
                                         to={opt.to}
+                                        state={isAiEditor ? { openNewProjectModal: true } : undefined}
                                         onClick={() => setNewProjectOpen(false)}
                                         className="flex items-start gap-3 px-3 py-2.5 text-left hover:bg-white/5 transition-colors"
                                     >

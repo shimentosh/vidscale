@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, X, Monitor, Smartphone, Square, Crop, Sparkles, History, CheckSquare, LayoutGrid, List, MoreVertical, FileVideo, Calendar, Scissors, LayoutTemplate, Layers, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,8 @@ const AI_EDITOR_FEATURES = [
 ] as const;
 
 export function AiEditorPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
@@ -121,6 +124,17 @@ export function AiEditorPage() {
   };
 
   const closeModal = () => setModalOpen(false);
+
+  // Open New Project modal when navigated from header "With AI Editor" with state
+  useEffect(() => {
+    const state = location.state as { openNewProjectModal?: boolean } | null;
+    if (state?.openNewProjectModal) {
+      setProjectTitle("");
+      setAspectRatio("16:9");
+      setModalOpen(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state]);
 
   useEffect(() => {
     if (!modalOpen) return;

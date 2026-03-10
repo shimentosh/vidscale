@@ -1,23 +1,23 @@
 import { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Play, RotateCcw, Loader2, X, Headphones, RotateCw } from "lucide-react";
+import { Search, Play, RotateCcw, Loader2, X, Headphones, RotateCw, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const VOICES = [
-  { id: "rachel", name: "Rachel", tags: ["american", "calm", "young", "female", "narration"] },
-  { id: "antoni", name: "Antoni", tags: ["american", "well-rounded", "young", "male", "narration"] },
-  { id: "drew", name: "Drew", tags: ["American", "well-rounded", "middle-aged", "male", "news"] },
-  { id: "clyde", name: "Clyde", tags: ["American", "war veteran", "middle-aged", "male", "characters"] },
-  { id: "paul", name: "Paul", tags: ["American", "authoritative", "middle-aged", "male", "news"] },
-  { id: "aria", name: "Aria", tags: ["American", "expressive", "middle-aged", "female", "social media"] },
-  { id: "domi", name: "Domi", tags: ["american", "strong", "young", "female", "narration"] },
-  { id: "dave", name: "Dave", tags: ["British", "conversational", "young", "male", "characters"] },
-  { id: "roger", name: "Roger", tags: ["American", "confident", "middle-aged", "male", "social media"] },
-  { id: "fin", name: "Fin", tags: ["Irish", "sailor", "old", "male", "characters"] },
+  { id: "rachel", name: "Rachel", tags: ["american", "calm", "young", "female", "narration"], description: "Best for documentary and calm narration" },
+  { id: "antoni", name: "Antoni", tags: ["american", "well-rounded", "young", "male", "narration"], description: "Best for narration and explainer videos" },
+  { id: "drew", name: "Drew", tags: ["American", "well-rounded", "middle-aged", "male", "news"], description: "Best for news and professional content" },
+  { id: "clyde", name: "Clyde", tags: ["American", "war veteran", "middle-aged", "male", "characters"], description: "Best for character roles and storytelling" },
+  { id: "paul", name: "Paul", tags: ["American", "authoritative", "middle-aged", "male", "news"], description: "Best for news and authoritative delivery" },
+  { id: "aria", name: "Aria", tags: ["American", "expressive", "middle-aged", "female", "social media"], description: "Best for social media and expressive content" },
+  { id: "domi", name: "Domi", tags: ["american", "strong", "young", "female", "narration"], description: "Best for documentary and strong narration" },
+  { id: "dave", name: "Dave", tags: ["British", "conversational", "young", "male", "characters"], description: "Best for characters and conversational content" },
+  { id: "roger", name: "Roger", tags: ["American", "confident", "middle-aged", "male", "social media"], description: "Best for social media and confident delivery" },
+  { id: "fin", name: "Fin", tags: ["Irish", "sailor", "old", "male", "characters"], description: "Best for character roles and storytelling" },
 ];
 
 const SPEED_MIN = 0.5;
@@ -25,6 +25,27 @@ const SPEED_MAX = 2;
 const SPEED_DEFAULT = 1;
 
 const PREVIEW_PHRASE = "This is a sample of how I sound. Use me for your voice over.";
+
+const FAVOURITES_STORAGE_KEY = "vidscale-playground-voice-favourites";
+
+function loadFavourites(): Set<string> {
+  try {
+    const raw = localStorage.getItem(FAVOURITES_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as unknown;
+    return new Set(Array.isArray(arr) ? arr.filter((id): id is string => typeof id === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveFavourites(ids: Set<string>) {
+  try {
+    localStorage.setItem(FAVOURITES_STORAGE_KEY, JSON.stringify([...ids]));
+  } catch {
+    // ignore
+  }
+}
 
 function useSpeechVoices() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -49,6 +70,7 @@ export function VoiceOversPage() {
 
   const [search, setSearch] = useState("");
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
+  const [favourites, setFavourites] = useState<Set<string>>(loadFavourites);
   const [speed, setSpeed] = useState(SPEED_DEFAULT);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -146,11 +168,24 @@ export function VoiceOversPage() {
     return VOICES.filter(
       (v) =>
         v.name.toLowerCase().includes(q) ||
+        v.description.toLowerCase().includes(q) ||
         v.tags.some((t) => t.toLowerCase().includes(q))
     );
   }, [search]);
 
   const handleSpeedReset = () => setSpeed(SPEED_DEFAULT);
+
+  const toggleFavourite = (voiceId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavourites((prev) => {
+      const next = new Set(prev);
+      if (next.has(voiceId)) next.delete(voiceId);
+      else next.add(voiceId);
+      saveFavourites(next);
+      return next;
+    });
+  };
 
   const playVoicePreview = (voice: (typeof VOICES)[0], e: React.MouseEvent) => {
     e.stopPropagation();
@@ -206,55 +241,71 @@ export function VoiceOversPage() {
                     No voices match your search.
                   </div>
                 ) : (
-                  filteredVoices.map((voice) => (
-                    <button
-                      key={voice.id}
-                      type="button"
-                      onClick={() => setSelectedVoiceId(voice.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors rounded-lg border border-transparent",
-                        selectedVoiceId === voice.id
-                          ? "bg-primary/15 border-primary ring-1 ring-primary/50"
-                          : "bg-background/30 border-border hover:bg-white/5 hover:border-border"
-                      )}
-                    >
-                      <span
+                  filteredVoices.map((voice) => {
+                    const isFavourite = favourites.has(voice.id);
+                    return (
+                      <div
+                        key={voice.id}
                         role="button"
                         tabIndex={0}
-                        onClick={(e) => playVoicePreview(voice, e)}
+                        onClick={() => setSelectedVoiceId(voice.id)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            playVoicePreview(voice, e as unknown as React.MouseEvent);
+                            setSelectedVoiceId(voice.id);
                           }
                         }}
                         className={cn(
-                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-primary/50 text-primary hover:bg-primary/20 transition-colors",
-                          playingId === voice.id && "bg-primary/20"
+                          "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors rounded-lg border border-transparent cursor-pointer",
+                          selectedVoiceId === voice.id
+                            ? "bg-primary/15 border-primary ring-1 ring-primary/50"
+                            : "bg-background/30 border-border hover:bg-white/5 hover:border-border"
                         )}
-                        aria-label={`Preview ${voice.name}`}
                       >
-                        {playingId === voice.id ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <Play size={16} className="ml-0.5" />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground">{voice.name}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-1">
-                          {voice.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-xs text-muted-foreground"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => playVoicePreview(voice, e)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              playVoicePreview(voice, e as unknown as React.MouseEvent);
+                            }
+                          }}
+                          className={cn(
+                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-primary/50 text-primary hover:bg-primary/20 transition-colors",
+                            playingId === voice.id && "bg-primary/20"
+                          )}
+                          aria-label={`Preview ${voice.name}`}
+                        >
+                          {playingId === voice.id ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <Play size={16} className="ml-0.5" />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground">{voice.name}</p>
+                          <p className="text-xs text-foreground/80 mt-1" title={voice.description}>
+                            {voice.description ?? "Voiceover"}
+                          </p>
                         </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 shrink-0 rounded-full transition-colors",
+                            isFavourite ? "text-red-500 hover:text-red-400 hover:bg-red-500/10" : "text-muted-foreground hover:text-foreground"
+                          )}
+                          onClick={(e) => toggleFavourite(voice.id, e)}
+                          aria-label={isFavourite ? `Remove ${voice.name} from favourites` : `Add ${voice.name} to favourites`}
+                        >
+                          <Heart size={16} className={isFavourite ? "fill-current" : ""} />
+                        </Button>
                       </div>
-                    </button>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </section>
