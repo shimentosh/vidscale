@@ -78,6 +78,7 @@
   --sidebar-ring: #16a34a;
 }
 
+/* Dark theme – primary is the bright green used for List/Grid toggle, Select, and key actions */
 .dark {
   --background: #0b0f19;
   --foreground: #ffffff;
@@ -173,4 +174,35 @@
   *::-webkit-scrollbar-corner {
     background: transparent;
   }
+}
+
+/* Workflow node: readable, compact, user-friendly */
+.workflow-node {
+  font-variant-numeric: tabular-nums;
+}
+
+.workflow-node-compact,
+.workflow-node-compact * {
+  font-size: inherit;
+  line-height: 1.35;
+}
+.workflow-node-compact {
+  font-size: 10px;
+}
+.workflow-node-compact input,
+.workflow-node-compact select,
+.workflow-node-compact button,
+.workflow-node-compact textarea {
+  font-size: 10px !important;
+  background: var(--background);
+}
+.workflow-node-compact label {
+  font-size: 9px !important;
+  color: var(--foreground);
+}
+/* Section headers stay readable */
+.workflow-node-compact [class*="uppercase"][class*="tracking"] {
+  font-size: 9px !important;
+  margin-bottom: 4px;
+  color: var(--muted-foreground);
 }

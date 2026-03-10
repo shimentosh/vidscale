@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -21,9 +22,8 @@ import {
   ImagePlus,
   Building2,
   GitBranch,
+  FolderOutput,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useSidebar } from "@/contexts/SidebarContext";
 import {
   getWorkspaces,
   getCurrentWorkspaceId,
@@ -34,13 +34,15 @@ import {
   type Workspace,
 } from "@/lib/workspaces";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 const mainNav = [
   { to: "/", label: "Home", icon: Home },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/templates", label: "Templates", icon: LayoutTemplate },
   { to: "/workflow", label: "Workflow", icon: GitBranch },
+  { to: "/outputs", label: "Outputs", icon: FolderOutput },
   { to: "/brand-kits", label: "Brand Kit", icon: Palette },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/x-tools", label: "X Tools", icon: Wrench },
@@ -116,8 +118,9 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "relative border-r border-border bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 overflow-hidden z-10",
-        expanded ? SIDEBAR_EXPANDED_W : SIDEBAR_COLLAPSED_W
+        "relative border-r border-border bg-sidebar flex flex-col shrink-0 min-h-screen transition-[width] duration-200 z-10",
+        expanded ? SIDEBAR_EXPANDED_W : SIDEBAR_COLLAPSED_W,
+        workspaceOpen ? "overflow-visible" : "overflow-hidden"
       )}
       aria-expanded={expanded}
     >
@@ -125,7 +128,7 @@ export function Sidebar() {
       <div
         className={cn(
           "flex border-b border-border shrink-0 transition-[padding] duration-200 relative",
-          expanded ? "p-3" : "p-3"
+          expanded ? "p-2" : "p-2"
         )}
       >
         <div className="relative flex-1 min-w-0 w-full" ref={dropdownRef}>
@@ -133,19 +136,19 @@ export function Sidebar() {
             type="button"
             onClick={() => expanded && setWorkspaceOpen((o) => !o)}
             className={cn(
-              "flex items-center w-full rounded-xl transition-all duration-200 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              "flex items-center w-full rounded-lg transition-all duration-200 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
               expanded
-                ? "gap-3 p-3 bg-sidebar-accent/50 hover:bg-sidebar-accent border border-border/50"
-                : "justify-center p-2 hover:bg-sidebar-accent rounded-lg"
+                ? "gap-2 p-2 bg-sidebar-accent/50 hover:bg-sidebar-accent border border-border/50"
+                : "justify-center p-1.5 hover:bg-sidebar-accent rounded-md"
             )}
             aria-expanded={workspaceOpen}
             aria-haspopup="true"
             aria-label="Switch workspace"
           >
             {current?.logoUrl ? (
-              <img src={current.logoUrl} alt="" className="w-9 h-9 rounded-lg bg-muted object-cover shrink-0 ring-1 ring-black/5" />
+              <img src={current.logoUrl} alt="" className="w-8 h-8 rounded-md bg-muted object-cover shrink-0 ring-1 ring-black/5" />
             ) : (
-              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm shrink-0 shadow-sm">
                 {(current?.name ?? "W").slice(0, 1).toUpperCase()}
               </div>
             )}
@@ -153,30 +156,37 @@ export function Sidebar() {
               <>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-sidebar-foreground truncate">{current?.name ?? "Workspace"}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">Current workspace</p>
+                  <p className="text-xs text-muted-foreground truncate">Current workspace</p>
                 </div>
                 <ChevronDown size={16} className={cn("shrink-0 text-muted-foreground transition-transform duration-200", workspaceOpen && "rotate-180")} />
               </>
             )}
           </button>
 
+          {expanded && workspaceOpen && createPortal(
+            <button
+              type="button"
+              aria-label="Close workspace menu"
+              className="fixed inset-0 z-[5] bg-black/20 backdrop-blur-sm"
+              onClick={() => setWorkspaceOpen(false)}
+            />,
+            document.body
+          )}
           {expanded && workspaceOpen && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-lg border border-border bg-sidebar shadow-xl overflow-hidden min-w-[200px]">
-              {/* Title — small muted text like reference "Brands" */}
-              <div className="px-3 pt-2.5 pb-1.5">
-                <p className="text-[11px] font-medium text-muted-foreground">Workspaces</p>
+            <div className="absolute left-full top-0 ml-0 z-20 w-72 min-w-[280px] max-w-[320px] rounded-xl border border-border bg-sidebar shadow-xl overflow-hidden">
+              <div className="px-4 pt-3 pb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Workspaces</p>
               </div>
-              {/* List — small text, icon + name, checkmark when active */}
-              <div className="max-h-[240px] overflow-y-auto py-0.5">
+              <div className="max-h-[260px] overflow-y-auto py-1">
                 {workspaces.map((w) => (
                   <div key={w.id} className="px-1">
                     {editingId === w.id ? (
-                      <div className="rounded-md border border-border bg-muted/20 p-2.5 space-y-2">
+                      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2.5">
                         <Input
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           placeholder="Name"
-                          className="h-7 text-xs"
+                          className="h-9 text-sm"
                           autoFocus
                           onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
                         />
@@ -200,44 +210,44 @@ export function Sidebar() {
                             e.target.value = "";
                           }}
                         />
-                        <button type="button" onClick={() => editLogoRef.current?.click()} className="flex items-center gap-1.5 w-full rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent">
-                          <ImagePlus size={12} /> {w.logoUrl ? "Change logo" : "Upload logo"}
+                        <button type="button" onClick={() => editLogoRef.current?.click()} className="flex items-center gap-2 w-full rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent">
+                          <ImagePlus size={14} /> {w.logoUrl ? "Change logo" : "Upload logo"}
                         </button>
-                        <div className="flex gap-1.5 pt-0.5">
-                          <button type="button" onClick={() => { setEditingId(null); setEditName(""); }} className="flex-1 h-6 rounded text-[11px] border border-border hover:bg-sidebar-accent">Cancel</button>
-                          <button type="button" onClick={handleSaveEdit} className="flex-1 h-6 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-1"><Check size={10} /> Save</button>
+                        <div className="flex gap-2 pt-1">
+                          <button type="button" onClick={() => { setEditingId(null); setEditName(""); }} className="flex-1 h-8 rounded-md text-sm border border-border hover:bg-sidebar-accent">Cancel</button>
+                          <button type="button" onClick={handleSaveEdit} className="flex-1 h-8 rounded-md text-sm bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-1.5"><Check size={14} /> Save</button>
                         </div>
                       </div>
                     ) : removeConfirmId === w.id ? (
-                      <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2 space-y-1.5">
-                        <p className="text-[11px] text-foreground">Delete &quot;{w.name}&quot;?</p>
-                        <div className="flex gap-1.5">
-                          <button type="button" onClick={() => setRemoveConfirmId(null)} className="flex-1 h-6 rounded text-[11px] hover:bg-sidebar-accent">Cancel</button>
-                          <button type="button" onClick={() => handleRemove(w.id)} className="flex-1 h-6 rounded text-[11px] bg-destructive text-destructive-foreground flex items-center justify-center gap-1"><Trash2 size={10} /> Delete</button>
+                      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2.5">
+                        <p className="text-sm text-foreground">Delete &quot;{w.name}&quot;?</p>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => setRemoveConfirmId(null)} className="flex-1 h-8 rounded-md text-sm hover:bg-sidebar-accent">Cancel</button>
+                          <button type="button" onClick={() => handleRemove(w.id)} className="flex-1 h-8 rounded-md text-sm bg-destructive text-destructive-foreground flex items-center justify-center gap-1.5"><Trash2 size={14} /> Delete</button>
                         </div>
                       </div>
                     ) : (
-                      <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent/80 transition-colors">
+                      <div className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-sidebar-accent/80 transition-colors">
                         <button
                           type="button"
                           onClick={() => { setCurrentWorkspaceId(w.id); setWorkspaceOpen(false); }}
-                          className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                          className="flex-1 flex items-center gap-3 min-w-0 text-left"
                         >
                           {w.logoUrl ? (
-                            <img src={w.logoUrl} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                            <img src={w.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0" />
                           ) : (
-                            <span className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
-                              <Building2 size={12} className="text-muted-foreground" />
+                            <span className="w-6 h-6 rounded-md bg-muted flex items-center justify-center shrink-0">
+                              <Building2 size={14} className="text-muted-foreground" />
                             </span>
                           )}
-                          <span className="truncate text-[11px] text-sidebar-foreground">{w.name}</span>
-                          {currentId === w.id && <Check size={12} className="shrink-0 text-primary ml-auto" aria-hidden />}
+                          <span className="truncate text-sm font-medium text-sidebar-foreground">{w.name}</span>
+                          {currentId === w.id && <Check size={16} className="shrink-0 text-primary ml-auto" aria-hidden />}
                         </button>
-                        {manageMode && editingId !== w.id && removeConfirmId !== w.id && (
+                        {(manageMode || workspaces.length > 1) && editingId !== w.id && removeConfirmId !== w.id && (
                           <div className="flex items-center gap-0.5 shrink-0">
-                            <button type="button" onClick={() => { setEditingId(w.id); setEditName(w.name); setRemoveConfirmId(null); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent" aria-label="Edit"><Pencil size={11} /></button>
+                            <button type="button" onClick={() => { setEditingId(w.id); setEditName(w.name); setRemoveConfirmId(null); }} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent" aria-label="Edit"><Pencil size={14} /></button>
                             {workspaces.length > 1 && (
-                              <button type="button" onClick={() => { setRemoveConfirmId(w.id); setEditingId(null); }} className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="Delete"><Trash2 size={11} /></button>
+                              <button type="button" onClick={() => { setRemoveConfirmId(w.id); setEditingId(null); }} className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="Delete"><Trash2 size={14} /></button>
                             )}
                           </div>
                         )}
@@ -246,38 +256,37 @@ export function Sidebar() {
                   </div>
                 ))}
               </div>
-              {/* Divider + Manage / Add — like reference */}
               <div className="border-t border-border mt-0.5" />
-              <div className="py-1">
+              <div className="py-1.5">
                 <button
                   type="button"
                   onClick={() => setManageMode((m) => !m)}
                   className={cn(
-                    "flex items-center gap-2 w-full px-3 py-1.5 text-[11px] text-left transition-colors rounded-none",
+                    "flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-medium text-left transition-colors",
                     manageMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                   )}
                 >
-                  <Settings size={12} className="shrink-0" />
+                  <Settings size={14} className="shrink-0" />
                   Manage workspaces
                 </button>
                 <button
                   type="button"
                   onClick={() => setAddFormVisible((v) => !v)}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent text-left transition-colors"
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors rounded-md"
                 >
-                  <Plus size={12} className="shrink-0" />
+                  <Plus size={14} className="shrink-0" />
                   Add workspace
                 </button>
                 {addFormVisible && (
-                  <div className="px-3 py-2 border-t border-border/60 bg-muted/20 flex gap-2">
+                  <div className="px-4 py-3 border-t border-border/60 bg-muted/20 flex gap-2">
                     <Input
                       value={createName}
                       onChange={(e) => setCreateName(e.target.value)}
                       placeholder="Workspace name"
-                      className="h-7 text-[11px] flex-1 bg-background/80"
+                      className="h-9 text-sm flex-1 bg-background/80"
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleCreate())}
                     />
-                    <button type="button" onClick={handleCreate} className="h-7 px-2.5 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
+                    <button type="button" onClick={handleCreate} className="h-9 px-4 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
                       Add
                     </button>
                   </div>

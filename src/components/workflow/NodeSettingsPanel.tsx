@@ -915,38 +915,69 @@ export function NodeSettingsPanel({
   label,
   settings,
   onChange,
+  compact,
 }: {
   moduleType: string;
   label: string;
   settings: NodeSettings;
   onChange: (settings: NodeSettings) => void;
+  compact?: boolean;
 }) {
   const props = { settings, onChange };
 
-  switch (moduleType) {
-    case "topic":
-      return <TopicSettings {...props} />;
-    case "voice-overs":
-      return <VoiceOversSettings {...props} />;
-    case "export":
-      return <ExportSettings {...props} />;
-    case "brand-kit":
-      return <BrandKitSettings {...props} />;
-    case "script-writing":
-      return <ScriptWritingSettings settings={settings} onChange={onChange} />;
-    case "media-library":
-      return <MediaLibrarySettings settings={settings} onChange={onChange} />;
-    case "overlays":
-      return <OverlaysSettings settings={settings} onChange={onChange} />;
-    case "subtitle":
-      return <SubtitleSettings settings={settings} onChange={onChange} />;
-    case "audio":
-      return <AudioSettings settings={settings} onChange={onChange} />;
-    default:
-      return (
-        <div className="text-sm text-muted-foreground">
-          No custom settings for this module.
-        </div>
-      );
+  const content = (() => {
+    switch (moduleType) {
+      case "topic":
+        return <TopicSettings {...props} />;
+      case "voice-overs":
+        return <VoiceOversSettings {...props} />;
+      case "export":
+        return <ExportSettings {...props} />;
+      case "brand-kit":
+        return <BrandKitSettings {...props} />;
+      case "script-writing":
+        return <ScriptWritingSettings settings={settings} onChange={onChange} />;
+      case "media-library":
+        return <MediaLibrarySettings settings={settings} onChange={onChange} />;
+      case "overlays":
+        return <OverlaysSettings settings={settings} onChange={onChange} />;
+      case "subtitle":
+        return <SubtitleSettings settings={settings} onChange={onChange} />;
+      case "audio":
+        return <AudioSettings settings={settings} onChange={onChange} />;
+      default:
+        return (
+          <div className="text-sm text-muted-foreground">
+            No custom settings for this module.
+          </div>
+        );
+    }
+  })();
+
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          "workflow-node-compact text-[10px] leading-snug text-foreground",
+          "[&_.space-y-4]:!space-y-2 [&_.space-y-3]:!space-y-1.5 [&_.space-y-2]:!space-y-1 [&_.space-y-1\\.5]:!space-y-1",
+          "[&_input]:!h-6 [&_input]:!text-[10px] [&_input]:!min-h-0 [&_input]:!py-1 [&_input]:!px-2 [&_input]:!rounded [&_input]:!border-border",
+          "[&_textarea]:!min-h-[56px] [&_textarea]:!text-[10px] [&_textarea]:!py-1 [&_textarea]:!px-2 [&_textarea]:!rounded [&_textarea]:!border-border",
+          "[&_button]:!h-6 [&_button]:!text-[10px] [&_button]:!px-2 [&_button]:!min-h-0 [&_button]:!rounded",
+          "[&_label]:!text-[9px] [&_label]:!mb-0.5 [&_label]:!leading-tight [&_label]:!font-medium [&_label]:!text-foreground",
+          "[&_select]:!h-6 [&_select]:!text-[10px] [&_select]:!py-1 [&_select]:!px-2 [&_select]:!rounded",
+          "[&_.rounded-lg]:!rounded-md [&_.rounded-md]:!rounded",
+          "[&_.p-4]:!p-2 [&_.px-4]:!px-2 [&_.py-3]:!py-2 [&_.px-3]:!px-2 [&_.py-2]:!py-1.5 [&_.py-2\\.5]:!py-1.5 [&_.pt-3]:!pt-2 [&_.pt-2]:!pt-1.5 [&_.p-3]:!p-2",
+          "[&_.min-h-\\[140px\\]]:!min-h-[64px] [&_.max-h-\\[200px\\]]:!max-h-[140px]",
+          "[&_.border]:!border-border/60",
+          "[&_p]:!text-[10px] [&_.text-sm]:!text-[10px] [&_.text-xs]:!text-[9px] [&_.font-semibold]:!text-[10px] [&_.font-medium]:!text-[10px]",
+          "[&_.mb-2]:!mb-1 [&_.mb-1\\.5]:!mb-0.5 [&_.mb-3]:!mb-1 [&_.mt-2]:!mt-1 [&_.gap-3]:!gap-1.5 [&_.gap-2]:!gap-1",
+          "[&_.border-t]:!border-border/50",
+          "[&_>_div]:!mt-2 [&_>_div]:first:!mt-0"
+        )}
+      >
+        {content}
+      </div>
+    );
   }
+  return content;
 }

@@ -36,6 +36,8 @@ import { ScriptPreviewPage } from "./pages/playground/ScriptPreviewPage";
 import { MediaLibraryPage } from "./pages/MediaLibraryPage";
 import { XToolsPage } from "./pages/XToolsPage";
 import { WorkflowPage } from "./pages/WorkflowPage";
+import { OutputsPage } from "./pages/OutputsPage";
+import { OutputViewPage } from "./pages/OutputViewPage";
 
 function App() {
   useEffect(() => {
@@ -48,10 +50,10 @@ function App() {
         <SidebarProvider>
           <Sidebar />
           <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
-          <Header />
-          <main className="flex-1 min-h-0 flex flex-col overflow-auto bg-background w-full">
-            <div className="flex-1 min-h-0 w-full flex flex-col">
-              <Routes>
+            <Header />
+            <main className="flex-1 min-h-0 flex flex-col overflow-auto bg-background w-full">
+              <div className="flex-1 min-h-0 w-full flex flex-col">
+                <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/brand-kits" element={<BrandKitsPage />} />
               <Route path="/brand-kits/new" element={<CreateBrandKitPage />} />
@@ -65,6 +67,8 @@ function App() {
               <Route path="/media-library" element={<MediaLibraryPage />} />
               <Route path="/x-tools" element={<XToolsPage />} />
               <Route path="/workflow" element={<WorkflowPage />} />
+              <Route path="/outputs" element={<OutputsPage />} />
+              <Route path="/outputs/view/:workflowId/:runKey" element={<OutputViewPage />} />
               <Route path="/playground" element={<PlaygroundLayout />}>
                 <Route index element={<Navigate to="/playground/topic" replace />} />
                 <Route path="topic" element={<StepTopic />} />
@@ -86,10 +90,10 @@ function App() {
                 <Route path="integration" element={<SettingsIntegration />} />
                 <Route path="storage" element={<SettingsStorage />} />
               </Route>
-              </Routes>
-            </div>
-          </main>
-        </div>
+                </Routes>
+              </div>
+            </main>
+          </div>
         </SidebarProvider>
       </div>
     </BrowserRouter>
