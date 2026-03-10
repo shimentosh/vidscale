@@ -35,6 +35,7 @@ import {
 import { ScriptPreviewPage } from "./pages/playground/ScriptPreviewPage";
 import { MediaLibraryPage } from "./pages/MediaLibraryPage";
 import { XToolsPage } from "./pages/XToolsPage";
+import { WorkflowPage } from "./pages/WorkflowPage";
 
 function App() {
   useEffect(() => {
@@ -63,6 +64,7 @@ function App() {
               <Route path="/editor" element={<MediaEditorPanel />} />
               <Route path="/media-library" element={<MediaLibraryPage />} />
               <Route path="/x-tools" element={<XToolsPage />} />
+              <Route path="/workflow" element={<WorkflowPage />} />
               <Route path="/playground" element={<PlaygroundLayout />}>
                 <Route index element={<Navigate to="/playground/topic" replace />} />
                 <Route path="topic" element={<StepTopic />} />

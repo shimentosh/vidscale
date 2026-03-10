@@ -346,9 +346,9 @@ export function AiDesignPage() {
             </div>
           </div>
 
-          {/* Inspiration – Design Templates grid */}
+          {/* Templates – Design templates grid */}
           <section>
-            <h2 className="text-sm font-semibold text-foreground mb-3">Inspiration</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-3">Templates</h2>
             <div className="relative flex items-center gap-1 mb-4">
               <div
                 ref={inspirationScrollRef}

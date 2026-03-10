@@ -5,9 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-const TEMPLATES_FILTERS = ["All", "Posters", "Social media", "Business", "Brand", "Photos"] as const;
+const TEMPLATES_FILTERS = ["All", "Workflows", "Posters", "Social media", "Business", "Brand", "Photos"] as const;
 
 const TEMPLATES_CARDS: { id: string; title: string; category: string; aspect: "tall" | "wide" | "square" }[] = [
+  { id: "topic-to-video", title: "Topic to Video", category: "Workflows", aspect: "wide" },
+  { id: "audio-to-video", title: "Audio to Video", category: "Workflows", aspect: "wide" },
+  { id: "script-to-video", title: "Script to Video", category: "Workflows", aspect: "wide" },
+  { id: "voiceover-to-video", title: "Voiceover to Video", category: "Workflows", aspect: "wide" },
   { id: "1", title: "Find Your Glow", category: "Brand", aspect: "tall" },
   { id: "2", title: "Everyday nutrition", category: "E-commerce", aspect: "wide" },
   { id: "3", title: "Deconstructed", category: "Food", aspect: "square" },
@@ -173,7 +177,7 @@ export function TemplatesPage() {
             </button>
           </div>
           <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4">
-            {TEMPLATES_CARDS.map((item) => (
+            {TEMPLATES_CARDS.filter((item) => templateFilter === "All" || item.category === templateFilter).map((item) => (
               <button
                 key={item.id}
                 type="button"

@@ -1,17 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getPlaygroundSteps } from "@/lib/playgroundModules";
 
-const STEPS = [
-  { step: 1, path: "topic", label: "Topic" },
-  { step: 2, path: "script-writing", label: "Script Writing" },
-  { step: 3, path: "voice-overs", label: "Voice Overs" },
-  { step: 4, path: "media-library", label: "Media Library" },
-  { step: 5, path: "overlays", label: "Overlays" },
-  { step: 6, path: "subtitle", label: "Subtitle" },
-  { step: 7, path: "audio", label: "Audio" },
-  { step: 8, path: "brand-kit", label: "Brand Kit" },
-  { step: 9, path: "export", label: "Export" },
-];
+const STEPS = getPlaygroundSteps();
 
 export function PlaygroundLayout() {
   return (

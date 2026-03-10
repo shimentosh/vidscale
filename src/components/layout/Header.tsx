@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronDown, Plus, LayoutTemplate, Sparkles, ImageIcon, Moon, Sun, Bell, CheckCircle, FileVideo, HardDrive, Zap, CheckCheck, CircleCheck, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronDown, Plus, LayoutTemplate, Sparkles, ImageIcon, Moon, Sun, Bell, CheckCircle, FileVideo, HardDrive, Zap, CheckCheck, CircleCheck, LogOut, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 type NotificationItem = {
   id: string;
@@ -65,6 +66,7 @@ function UsageRow({ label, used, total, unit }: { label: string; used: number; t
 
 export function Header() {
     const location = useLocation();
+    const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
     const isPlayground = location.pathname.startsWith("/playground");
     const isBrandKits = location.pathname.startsWith("/brand-kits");
     const [newProjectOpen, setNewProjectOpen] = useState(false);
@@ -142,6 +144,15 @@ export function Header() {
     return (
         <header className="h-[69px] shrink-0 flex items-center justify-between border-b border-border px-6 bg-background">
             <div className="flex items-center gap-3 min-w-0">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-lg h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    onClick={toggleSidebar}
+                    aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                    {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+                </Button>
                 {backLink}
             </div>
             <div className="flex items-center gap-2 shrink-0">

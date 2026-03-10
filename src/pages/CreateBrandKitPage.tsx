@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { getBrandKitById, saveBrandKit, updateBrandKit } from "@/lib/brandKits";
+import { getCurrentWorkspaceId, getWorkspaceById } from "@/lib/workspaces";
 
 const FONT_FAMILIES = ["Montserrat", "Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Playfair Display", "Source Sans 3"] as const;
 const FONT_WEIGHTS = ["Light", "Regular", "Medium", "SemiBold", "Bold"] as const;
@@ -125,6 +126,80 @@ function getCtaAssetPreviewStyle(
   }
 }
 
+/** 2D position control for CTA X/Y offset: draggable dot in a box, -100..100 each axis */
+function CtaPositionXY({
+  x,
+  y,
+  onChange,
+}: {
+  x: number;
+  y: number;
+  onChange: (x: number, y: number) => void;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  const updateFromEvent = (clientX: number, clientY: number) => {
+    const el = boxRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const xPct = (clientX - rect.left) / rect.width;
+    const yPct = (clientY - rect.top) / rect.height;
+    const newX = Math.round(Math.max(-100, Math.min(100, xPct * 200 - 100)));
+    const newY = Math.round(Math.max(-100, Math.min(100, yPct * 200 - 100)));
+    onChange(newX, newY);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    updateFromEvent(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (e.buttons !== 1 && e.pointerType !== "touch") return;
+    e.preventDefault();
+    updateFromEvent(e.clientX, e.clientY);
+  };
+
+  const leftPct = ((x + 100) / 200) * 100;
+  const topPct = ((y + 100) / 200) * 100;
+
+  return (
+    <div className="space-y-1">
+      <Label className="items-center gap-2 font-medium select-none text-[10px] text-muted-foreground block">
+        Position (X, Y)
+      </Label>
+      <div
+        ref={boxRef}
+        role="slider"
+        aria-valuenow={x}
+        aria-valuetext={`X ${x}, Y ${y}`}
+        tabIndex={0}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onKeyDown={(e) => {
+          const step = e.shiftKey ? 10 : 1;
+          if (e.key === "ArrowLeft") onChange(Math.max(-100, x - step), y);
+          else if (e.key === "ArrowRight") onChange(Math.min(100, x + step), y);
+          else if (e.key === "ArrowUp") onChange(x, Math.max(-100, y - step));
+          else if (e.key === "ArrowDown") onChange(x, Math.min(100, y + step));
+        }}
+        className="relative w-full h-20 rounded-lg border border-border bg-input/30 cursor-crosshair touch-none"
+      >
+        <div
+          className="absolute w-2.5 h-2.5 rounded-full bg-primary border-2 border-primary-foreground pointer-events-none"
+          style={{
+            left: `${leftPct}%`,
+            top: `${topPct}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      </div>
+      <p className="text-[10px] text-muted-foreground">X {x}% · Y {y}%</p>
+    </div>
+  );
+}
+
 const TABS = [
   { id: "logos", label: "Logos", icon: Image },
   { id: "colors", label: "Colors", icon: Palette },
@@ -153,8 +228,8 @@ export function CreateBrandKitPage() {
       if (kit.primaryColor) setBrandColor(kit.primaryColor);
     }
   }, [kitId]);
-  const primaryLogoRef = useRef<HTMLInputElement>(null);
   const watermarkLogoRef = useRef<HTMLInputElement>(null);
+  const [useWorkspaceLogo, setUseWorkspaceLogo] = useState(false);
   const [watermarkLogoFile, setWatermarkLogoFile] = useState<File | null>(null);
   const [watermarkPosition, setWatermarkPosition] = useState("Bottom Right");
   const [watermarkOpacity, setWatermarkOpacity] = useState(80);
@@ -308,8 +383,14 @@ export function CreateBrandKitPage() {
                   <>
                     <h2 className="text-base font-semibold text-foreground tracking-tight mb-4">Logo Assets</h2>
 
+                    {(() => {
+                      const currentWorkspace = getWorkspaceById(getCurrentWorkspaceId() ?? "");
+                      const workspaceLogoUrl = currentWorkspace?.logoUrl;
+                      const previewLogoUrl = useWorkspaceLogo && workspaceLogoUrl ? workspaceLogoUrl : watermarkPreviewUrl && watermarkLogoFile ? watermarkPreviewUrl : null;
+                      const showUpload = !useWorkspaceLogo;
+                      return (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                      {/* Live preview — same style as CTA */}
+                      {/* Live preview */}
                       <div className="lg:col-span-1 space-y-2 flex flex-col items-center">
                         <div className="flex items-center justify-between gap-2 w-full">
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live preview</p>
@@ -345,13 +426,13 @@ export function CreateBrandKitPage() {
                           )}
                         >
                           <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c0c] via-[#141414] to-[#0a0a0a]" aria-hidden />
-                          {watermarkPreviewUrl && watermarkLogoFile ? (
+                          {previewLogoUrl ? (
                             <div
                               className="overflow-hidden"
                               style={getWatermarkPreviewStyle(watermarkPosition, watermarkSize)}
                             >
                               <img
-                                src={watermarkPreviewUrl}
+                                src={previewLogoUrl}
                                 alt="Watermark preview"
                                 className="w-full h-full object-contain"
                                 style={{ opacity: watermarkOpacity / 100 }}
@@ -359,7 +440,9 @@ export function CreateBrandKitPage() {
                             </div>
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-sm text-muted-foreground/80">Upload watermark to preview</span>
+                              <span className="text-sm text-muted-foreground/80">
+                                {useWorkspaceLogo && !workspaceLogoUrl ? "Set a logo in your workspace" : "Upload watermark or use workspace logo"}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -368,44 +451,41 @@ export function CreateBrandKitPage() {
                         </p>
                       </div>
 
-                      {/* Logo upload + watermark settings */}
+                      {/* Watermark settings */}
                       <div className="lg:col-span-2 space-y-6">
-                        <div className="space-y-2">
-                          <h3 className="text-sm font-medium text-foreground">Primary Logo</h3>
-                          <p className="text-xs text-muted-foreground">
-                            Your main brand logo. Recommended: PNG with transparent background.
-                          </p>
-                          <UploadZone
-                            label="Click to upload logo"
-                            onClick={() => primaryLogoRef.current?.click()}
-                          />
-                          <input
-                            ref={primaryLogoRef}
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            aria-label="Upload primary logo"
+                        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/[0.02] p-4">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Use logo from workspace</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Use the current workspace logo as the watermark.</p>
+                          </div>
+                          <Switch
+                            checked={useWorkspaceLogo}
+                            onCheckedChange={setUseWorkspaceLogo}
+                            className="shrink-0"
                           />
                         </div>
-
                         <div className="space-y-2">
                           <h3 className="text-sm font-medium text-foreground">Watermark Logo</h3>
                           <p className="text-xs text-muted-foreground">
-                            Displayed on videos. Configure position, opacity, and size.
+                            {useWorkspaceLogo ? "Using workspace logo above. Turn off to upload your own." : "Displayed on videos. Configure position, opacity, and size."}
                           </p>
-                          <UploadZone
-                            label={watermarkLogoFile ? watermarkLogoFile.name : "Click to upload watermark"}
-                            onClick={() => watermarkLogoRef.current?.click()}
-                          />
-                          <input
-                            ref={watermarkLogoRef}
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            aria-label="Upload watermark logo"
-                            onChange={(e) => setWatermarkLogoFile(e.target.files?.[0] ?? null)}
-                          />
-                          {watermarkLogoFile && (
+                          {showUpload && (
+                            <>
+                              <UploadZone
+                                label={watermarkLogoFile ? watermarkLogoFile.name : "Click to upload watermark"}
+                                onClick={() => watermarkLogoRef.current?.click()}
+                              />
+                              <input
+                                ref={watermarkLogoRef}
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                aria-label="Upload watermark logo"
+                                onChange={(e) => setWatermarkLogoFile(e.target.files?.[0] ?? null)}
+                              />
+                            </>
+                          )}
+                          {(watermarkLogoFile || useWorkspaceLogo) && (
                             <div className="rounded-xl border border-border/60 bg-white/[0.02] p-5 space-y-4 mt-4">
                               <h4 className="text-sm font-medium text-foreground">Watermark settings</h4>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -456,6 +536,8 @@ export function CreateBrandKitPage() {
                         </div>
                       </div>
                     </div>
+                    );
+                    })()}
                   </>
                 )}
                 {activeTab === "colors" && (
@@ -774,34 +856,14 @@ export function CreateBrandKitPage() {
                               />
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-muted-foreground text-xs">X Offset</Label>
-                              <span className="text-xs text-muted-foreground">{ctaXOffset}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min={-100}
-                              max={100}
-                              value={ctaXOffset}
-                              onChange={(e) => setCtaXOffset(Number(e.target.value))}
-                              className="w-full h-2 rounded-full appearance-none bg-input accent-primary cursor-pointer"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-muted-foreground text-xs">Y Offset</Label>
-                              <span className="text-xs text-muted-foreground">{ctaYOffset}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min={-100}
-                              max={100}
-                              value={ctaYOffset}
-                              onChange={(e) => setCtaYOffset(Number(e.target.value))}
-                              className="w-full h-2 rounded-full appearance-none bg-input accent-primary cursor-pointer"
-                            />
-                          </div>
+                          <CtaPositionXY
+                            x={ctaXOffset}
+                            y={ctaYOffset}
+                            onChange={(x, y) => {
+                              setCtaXOffset(x);
+                              setCtaYOffset(y);
+                            }}
+                          />
                         </div>
                         </>
                       ) : (
@@ -863,34 +925,14 @@ export function CreateBrandKitPage() {
                               />
                             </div>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-muted-foreground text-xs">X Offset</Label>
-                              <span className="text-xs text-muted-foreground">{ctaXOffset}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min={-100}
-                              max={100}
-                              value={ctaXOffset}
-                              onChange={(e) => setCtaXOffset(Number(e.target.value))}
-                              className="w-full h-2 rounded-full appearance-none bg-input accent-primary cursor-pointer"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-muted-foreground text-xs">Y Offset</Label>
-                              <span className="text-xs text-muted-foreground">{ctaYOffset}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min={-100}
-                              max={100}
-                              value={ctaYOffset}
-                              onChange={(e) => setCtaYOffset(Number(e.target.value))}
-                              className="w-full h-2 rounded-full appearance-none bg-input accent-primary cursor-pointer"
-                            />
-                          </div>
+                          <CtaPositionXY
+                            x={ctaXOffset}
+                            y={ctaYOffset}
+                            onChange={(x, y) => {
+                              setCtaXOffset(x);
+                              setCtaYOffset(y);
+                            }}
+                          />
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label className="text-muted-foreground text-xs">Background Color</Label>

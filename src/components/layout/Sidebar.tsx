@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -12,16 +13,34 @@ import {
   Wrench,
   Sparkles,
   Settings,
-  PanelLeftClose,
-  PanelLeft,
+  ChevronDown,
+  Plus,
+  Pencil,
+  Trash2,
+  Check,
+  ImagePlus,
+  Building2,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/contexts/SidebarContext";
+import {
+  getWorkspaces,
+  getCurrentWorkspaceId,
+  setCurrentWorkspaceId,
+  createWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
+  type Workspace,
+} from "@/lib/workspaces";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const mainNav = [
   { to: "/", label: "Home", icon: Home },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/templates", label: "Templates", icon: LayoutTemplate },
+  { to: "/workflow", label: "Workflow", icon: GitBranch },
   { to: "/brand-kits", label: "Brand Kit", icon: Palette },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/x-tools", label: "X Tools", icon: Wrench },
@@ -40,7 +59,60 @@ const SIDEBAR_EXPANDED_W = "w-64 min-w-64";
 const SIDEBAR_COLLAPSED_W = "w-16 min-w-16";
 
 export function Sidebar() {
-  const { open: expanded, toggle } = useSidebar();
+  const { open: expanded } = useSidebar();
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => getWorkspaces());
+  const currentId = getCurrentWorkspaceId();
+  const current = workspaces.find((w) => w.id === currentId) ?? workspaces[0];
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
+  const [manageMode, setManageMode] = useState(false);
+  const [addFormVisible, setAddFormVisible] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const editLogoRef = useRef<HTMLInputElement>(null);
+
+  const refresh = () => setWorkspaces(getWorkspaces());
+
+  useEffect(() => {
+    if (!workspaceOpen) return;
+    const onOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setWorkspaceOpen(false);
+    };
+    window.addEventListener("mousedown", onOutside);
+    return () => window.removeEventListener("mousedown", onOutside);
+  }, [workspaceOpen]);
+
+  const handleCreate = () => {
+    if (!createName.trim()) return;
+    createWorkspace({ name: createName.trim() });
+    setCreateName("");
+    setAddFormVisible(false);
+    refresh();
+    setWorkspaceOpen(false);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingId && editName.trim()) {
+      updateWorkspace(editingId, { name: editName.trim() });
+      setEditingId(null);
+      setEditName("");
+      refresh();
+    }
+  };
+
+  const handleRemove = (id: string) => {
+    if (removeConfirmId === id) {
+      deleteWorkspace(id);
+      setRemoveConfirmId(null);
+      refresh();
+      setWorkspaceOpen(false);
+    } else {
+      setRemoveConfirmId(id);
+    }
+  };
+
   return (
     <aside
       className={cn(
@@ -49,33 +121,171 @@ export function Sidebar() {
       )}
       aria-expanded={expanded}
     >
-      {/* Header: logo + optional text + collapse btn */}
+      {/* Workspace switcher — professional card-style trigger + dropdown */}
       <div
         className={cn(
           "flex border-b border-border shrink-0 transition-[padding] duration-200 relative",
-          expanded ? "flex-row items-center p-4 pr-10 gap-3" : "flex-col items-center p-3 gap-2"
+          expanded ? "p-3" : "p-3"
         )}
       >
-        <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold shrink-0">
-          S
-        </div>
-        {expanded && (
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-sidebar-foreground uppercase tracking-wider truncate">Shimanto Neer&apos;s...</h2>
-            <p className="text-xs text-muted-foreground truncate">Personal</p>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={toggle}
-          className={cn(
-            "rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors z-10 shrink-0 p-1.5",
-            expanded ? "absolute top-3 right-3" : ""
+        <div className="relative flex-1 min-w-0 w-full" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => expanded && setWorkspaceOpen((o) => !o)}
+            className={cn(
+              "flex items-center w-full rounded-xl transition-all duration-200 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              expanded
+                ? "gap-3 p-3 bg-sidebar-accent/50 hover:bg-sidebar-accent border border-border/50"
+                : "justify-center p-2 hover:bg-sidebar-accent rounded-lg"
+            )}
+            aria-expanded={workspaceOpen}
+            aria-haspopup="true"
+            aria-label="Switch workspace"
+          >
+            {current?.logoUrl ? (
+              <img src={current.logoUrl} alt="" className="w-9 h-9 rounded-lg bg-muted object-cover shrink-0 ring-1 ring-black/5" />
+            ) : (
+              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm shrink-0 shadow-sm">
+                {(current?.name ?? "W").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            {expanded && (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate">{current?.name ?? "Workspace"}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">Current workspace</p>
+                </div>
+                <ChevronDown size={16} className={cn("shrink-0 text-muted-foreground transition-transform duration-200", workspaceOpen && "rotate-180")} />
+              </>
+            )}
+          </button>
+
+          {expanded && workspaceOpen && (
+            <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-lg border border-border bg-sidebar shadow-xl overflow-hidden min-w-[200px]">
+              {/* Title — small muted text like reference "Brands" */}
+              <div className="px-3 pt-2.5 pb-1.5">
+                <p className="text-[11px] font-medium text-muted-foreground">Workspaces</p>
+              </div>
+              {/* List — small text, icon + name, checkmark when active */}
+              <div className="max-h-[240px] overflow-y-auto py-0.5">
+                {workspaces.map((w) => (
+                  <div key={w.id} className="px-1">
+                    {editingId === w.id ? (
+                      <div className="rounded-md border border-border bg-muted/20 p-2.5 space-y-2">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Name"
+                          className="h-7 text-xs"
+                          autoFocus
+                          onKeyDown={(e) => e.key === "Enter" && handleSaveEdit()}
+                        />
+                        <input
+                          ref={editLogoRef}
+                          type="file"
+                          accept="image/*"
+                          className="sr-only"
+                          aria-label="Upload logo"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            const id = editingId;
+                            if (file && id) {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                updateWorkspace(id, { logoUrl: reader.result as string });
+                                refresh();
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                            e.target.value = "";
+                          }}
+                        />
+                        <button type="button" onClick={() => editLogoRef.current?.click()} className="flex items-center gap-1.5 w-full rounded px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent">
+                          <ImagePlus size={12} /> {w.logoUrl ? "Change logo" : "Upload logo"}
+                        </button>
+                        <div className="flex gap-1.5 pt-0.5">
+                          <button type="button" onClick={() => { setEditingId(null); setEditName(""); }} className="flex-1 h-6 rounded text-[11px] border border-border hover:bg-sidebar-accent">Cancel</button>
+                          <button type="button" onClick={handleSaveEdit} className="flex-1 h-6 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-1"><Check size={10} /> Save</button>
+                        </div>
+                      </div>
+                    ) : removeConfirmId === w.id ? (
+                      <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2 space-y-1.5">
+                        <p className="text-[11px] text-foreground">Delete &quot;{w.name}&quot;?</p>
+                        <div className="flex gap-1.5">
+                          <button type="button" onClick={() => setRemoveConfirmId(null)} className="flex-1 h-6 rounded text-[11px] hover:bg-sidebar-accent">Cancel</button>
+                          <button type="button" onClick={() => handleRemove(w.id)} className="flex-1 h-6 rounded text-[11px] bg-destructive text-destructive-foreground flex items-center justify-center gap-1"><Trash2 size={10} /> Delete</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-sidebar-accent/80 transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => { setCurrentWorkspaceId(w.id); setWorkspaceOpen(false); }}
+                          className="flex-1 flex items-center gap-2 min-w-0 text-left"
+                        >
+                          {w.logoUrl ? (
+                            <img src={w.logoUrl} alt="" className="w-5 h-5 rounded object-cover shrink-0" />
+                          ) : (
+                            <span className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
+                              <Building2 size={12} className="text-muted-foreground" />
+                            </span>
+                          )}
+                          <span className="truncate text-[11px] text-sidebar-foreground">{w.name}</span>
+                          {currentId === w.id && <Check size={12} className="shrink-0 text-primary ml-auto" aria-hidden />}
+                        </button>
+                        {manageMode && editingId !== w.id && removeConfirmId !== w.id && (
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <button type="button" onClick={() => { setEditingId(w.id); setEditName(w.name); setRemoveConfirmId(null); }} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent" aria-label="Edit"><Pencil size={11} /></button>
+                            {workspaces.length > 1 && (
+                              <button type="button" onClick={() => { setRemoveConfirmId(w.id); setEditingId(null); }} className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="Delete"><Trash2 size={11} /></button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Divider + Manage / Add — like reference */}
+              <div className="border-t border-border mt-0.5" />
+              <div className="py-1">
+                <button
+                  type="button"
+                  onClick={() => setManageMode((m) => !m)}
+                  className={cn(
+                    "flex items-center gap-2 w-full px-3 py-1.5 text-[11px] text-left transition-colors rounded-none",
+                    manageMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
+                  )}
+                >
+                  <Settings size={12} className="shrink-0" />
+                  Manage workspaces
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddFormVisible((v) => !v)}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent text-left transition-colors"
+                >
+                  <Plus size={12} className="shrink-0" />
+                  Add workspace
+                </button>
+                {addFormVisible && (
+                  <div className="px-3 py-2 border-t border-border/60 bg-muted/20 flex gap-2">
+                    <Input
+                      value={createName}
+                      onChange={(e) => setCreateName(e.target.value)}
+                      placeholder="Workspace name"
+                      className="h-7 text-[11px] flex-1 bg-background/80"
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleCreate())}
+                    />
+                    <button type="button" onClick={handleCreate} className="h-7 px-2.5 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
+                      Add
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
-          aria-label={expanded ? "Collapse to icons" : "Expand sidebar"}
-        >
-          {expanded ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
-        </button>
+        </div>
       </div>
 
       <nav className={cn("flex-1 px-2 overflow-y-auto", expanded ? "py-2" : "py-1")}>
