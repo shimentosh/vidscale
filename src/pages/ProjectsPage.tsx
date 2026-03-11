@@ -210,28 +210,30 @@ export function ProjectsPage() {
                 <CheckSquare size={16} className="text-muted-foreground" />
                 Select
               </Button>
-              <div className="flex rounded-md border border-border overflow-hidden">
+              <div className="flex rounded-full p-0.5 bg-muted/40 border border-border/40">
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
                   className={cn(
-                    "p-2 transition-colors",
-                    viewMode === "grid" ? "bg-white/10 text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium transition-all",
+                    viewMode === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-label="Grid view"
                 >
-                  <LayoutGrid size={18} />
+                  <LayoutGrid size={16} className="inline-block sm:mr-1.5" />
+                  <span className="hidden sm:inline">Grid</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={cn(
-                    "p-2 transition-colors",
-                    viewMode === "list" ? "bg-white/10 text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium transition-all",
+                    viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-label="List view"
                 >
-                  <List size={18} />
+                  <List size={16} className="inline-block sm:mr-1.5" />
+                  <span className="hidden sm:inline">List</span>
                 </button>
               </div>
             </div>

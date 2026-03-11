@@ -223,32 +223,32 @@ export function BrandKitsPage() {
               </p>
             </div>
             {hasBrandKits && (
-              <div className="flex rounded-lg bg-muted/50 p-0.5 shrink-0" role="tablist" aria-label="View mode">
+              <div className="flex rounded-full p-0.5 bg-muted/40 border border-border/40 shrink-0" role="tablist" aria-label="View mode">
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
                   className={cn(
-                    "flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-colors",
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium transition-all",
                     viewMode === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-pressed={viewMode === "grid"}
                   aria-label="Grid view"
                 >
-                  <LayoutGrid size={14} />
-                  Grid
+                  <LayoutGrid size={16} className="inline-block sm:mr-1.5" />
+                  <span className="hidden sm:inline">Grid</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={cn(
-                    "flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-colors",
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium transition-all",
                     viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-pressed={viewMode === "list"}
                   aria-label="List view"
                 >
-                  <List size={14} />
-                  List
+                  <List size={16} className="inline-block sm:mr-1.5" />
+                  <span className="hidden sm:inline">List</span>
                 </button>
               </div>
             )}

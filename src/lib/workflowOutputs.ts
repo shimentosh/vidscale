@@ -23,7 +23,7 @@ export type WorkflowOutput = {
   /** Display aspect ratio e.g. "16:9", "9:16", "1:1" */
   aspectRatio?: string;
   /** Output status for display on cards */
-  status?: "done" | "processing" | "queue";
+  status?: "done" | "processing" | "queue" | "failed";
 };
 
 function loadOutputs(): WorkflowOutput[] {
@@ -41,25 +41,20 @@ function saveOutputs(outputs: WorkflowOutput[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(outputs));
 }
 
-/** Demo outputs: mix of bulk runs (same runId) and single outputs */
+/** Demo outputs: 4 items total — 1 processing, 3 complete. Mix of single (no runId) and bulk (same runId). */
 export function getDemoOutputs(): WorkflowOutput[] {
   const now = new Date().toISOString();
   const demoId = "demo-workflow-vidscale";
-  const topicId = "topic-to-video-workflow";
-  const scriptIntro = "Welcome to this video. In the next few minutes we'll cover the key points you need to know. Let's get started with a quick overview of the topic.";
-  const scriptTopic = "Topic to video: turn your ideas into engaging content. This batch export includes multiple segments. Use the script and voice over together for consistency.";
-  const scriptSingle = "Single export in 1080p. This is the full narration script for the video. You can read along while the voice over plays, or use it for subtitles and editing.";
-  const scriptBatch = "Batch video from Topic to Video workflow. Each segment has its own script and optional voice over. Export and locate files in the workflow output folder.";
+  const script = "Demo script for this output. You can preview script and voice over from the card.";
   const sampleVoice = "https://download.samplelib.com/mp3/sample-6s.mp3";
+
   return [
-    { id: "out-demo-1", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Intro_16x9_export.mp4", durationSeconds: 42, sizeBytes: 12_400_000, createdAt: now, runId: "run-1", script: scriptIntro, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "done" },
-    { id: "out-demo-2", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Topic_to_Video_batch_01.mp4", durationSeconds: 28, sizeBytes: 8_200_000, createdAt: now, runId: "run-1", script: scriptTopic, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "processing" },
-    { id: "out-demo-3", workflowId: demoId, workflowName: "Demo Workflow", type: "image", name: "thumbnail_frame_001.png", sizeBytes: 340_000, createdAt: now, runId: "run-1", script: "Thumbnail frame for the intro video.", aspectRatio: "16:9", status: "queue" },
-    { id: "out-demo-4", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Single_export_1080p.mp4", durationSeconds: 65, sizeBytes: 18_500_000, createdAt: now, script: scriptSingle, voiceOverUrl: sampleVoice, aspectRatio: "16:9" },
-    { id: "out-demo-5", workflowId: demoId, workflowName: "Demo Workflow", type: "image", name: "cover_art.png", sizeBytes: 120_000, createdAt: now, script: "Cover art for the project.", aspectRatio: "1:1" },
-    { id: "out-demo-6", workflowId: topicId, workflowName: "Topic to Video", type: "video", name: "batch_01_video.mp4", durationSeconds: 35, sizeBytes: 9_100_000, createdAt: now, runId: "run-bulk-1", script: scriptBatch, voiceOverUrl: sampleVoice, aspectRatio: "9:16" },
-    { id: "out-demo-7", workflowId: topicId, workflowName: "Topic to Video", type: "video", name: "batch_02_video.mp4", durationSeconds: 38, sizeBytes: 10_200_000, createdAt: now, runId: "run-bulk-1", script: scriptBatch, voiceOverUrl: sampleVoice, aspectRatio: "9:16" },
-    { id: "out-demo-8", workflowId: topicId, workflowName: "Topic to Video", type: "image", name: "batch_01_thumb.png", sizeBytes: 88_000, createdAt: now, runId: "run-bulk-1", script: "Thumbnail for batch 01.", aspectRatio: "9:16" },
+    // Single outputs (each appears as its own run/card on Output page)
+    { id: "out-demo-1", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Story_15s_clip.mp4", durationSeconds: 15, sizeBytes: 3_000_000, createdAt: now, script, voiceOverUrl: sampleVoice, aspectRatio: "9:16", status: "done" },
+    { id: "out-demo-2", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Single_export_1080p.mp4", durationSeconds: 65, sizeBytes: 18_500_000, createdAt: now, script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "done" },
+    // Bulk run (2 items = one run/card on Output page: 1 done, 1 processing)
+    { id: "out-demo-3", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Intro_16x9_export.mp4", durationSeconds: 42, sizeBytes: 12_400_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "done" },
+    { id: "out-demo-4", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Batch_processing.mp4", durationSeconds: 30, sizeBytes: 8_000_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "processing" },
   ];
 }
 
@@ -89,13 +84,37 @@ function mergeDemoScriptAndVoiceOver(list: WorkflowOutput[]): WorkflowOutput[] {
   return out;
 }
 
+const DEMO_ID_PREFIX = "out-demo";
+
+function isDemoOutputId(id: string): boolean {
+  return id.startsWith(DEMO_ID_PREFIX);
+}
+
 export function getOutputs(): WorkflowOutput[] {
   let list = loadOutputs();
+  const demo = getDemoOutputs();
+
   if (list.length === 0) {
-    list = getDemoOutputs();
+    list = [...demo];
     saveOutputs(list);
   } else {
-    list = mergeDemoScriptAndVoiceOver(list);
+    const allStoredAreDemo = list.every((o) => isDemoOutputId(o.id));
+    if (allStoredAreDemo) {
+      list = [...demo];
+      saveOutputs(list);
+    } else {
+      const withoutDemo = list.filter((o) => !isDemoOutputId(o.id));
+      const existingIds = new Set(withoutDemo.map((o) => o.id));
+      list = [...withoutDemo];
+      for (const d of demo) {
+        if (!existingIds.has(d.id)) {
+          list.push(d);
+          existingIds.add(d.id);
+        }
+      }
+      saveOutputs(list);
+      list = mergeDemoScriptAndVoiceOver(list);
+    }
   }
   return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
@@ -198,6 +217,33 @@ export function getRunKey(run: WorkflowRun): string {
   return run.runId ?? (run.items[0] ? `single-${run.items[0].id}` : "");
 }
 
+/** Primary output type for the run (for filtering: video, image, etc.) */
+export function getRunOutputType(run: WorkflowRun): OutputType {
+  const types = run.items.map((i) => i.type);
+  if (types.some((t) => t === "video")) return "video";
+  if (types.some((t) => t === "image")) return "image";
+  if (types.some((t) => t === "audio")) return "audio";
+  return run.items[0]?.type ?? "file";
+}
+
+/** Run status: failed if any item failed, else processing if any in progress, else done */
+export function getRunStatus(run: WorkflowRun): "done" | "processing" | "failed" {
+  if (run.items.some((i) => i.status === "failed")) return "failed";
+  const inProgress = run.items.some(
+    (i) => i.status === "processing" || i.status === "queue"
+  );
+  return inProgress ? "processing" : "done";
+}
+
+/** Progress for processing runs: done count and total (for "04/33 processing" label) */
+export function getRunProgress(run: WorkflowRun): { done: number; total: number } {
+  const total = run.items.length;
+  const done = run.items.filter(
+    (i) => !i.status || i.status === "done"
+  ).length;
+  return { done, total };
+}
+
 /** Find workflow group and run by workflowId and runKey (for view page) */
 export function getRunByWorkflowAndKey(
   workflowId: string,
@@ -280,9 +326,17 @@ export function setActivityCounts(counts: Partial<OutputActivity>): void {
 }
 
 /** Stats derived from groups and activity: successful runs count, in-progress count */
-export function getOutputStats(groups: WorkflowOutputGroup[]): { successfulRuns: number; inProgress: number } {
-  const successfulRuns = groups.reduce((sum, g) => sum + g.runs.length, 0);
+export function getOutputStats(groups: WorkflowOutputGroup[]): { successfulRuns: number; inProgress: number; failedRuns: number } {
+  let successfulRuns = 0;
+  let failedRuns = 0;
+  for (const g of groups) {
+    for (const run of g.runs) {
+      const hasFailed = run.items.some((i) => i.status === "failed");
+      if (hasFailed) failedRuns += 1;
+      else successfulRuns += 1;
+    }
+  }
   const activity = getActivityCounts();
   const inProgress = activity.processing + activity.queue + activity.rendering;
-  return { successfulRuns, inProgress };
+  return { successfulRuns, inProgress, failedRuns };
 }

@@ -206,3 +206,48 @@
   margin-bottom: 4px;
   color: var(--muted-foreground);
 }
+
+/* Slow, modern loading pulse for queue/processing status (on/off style) */
+@keyframes status-loading-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.animate-status-pulse {
+  animation: status-loading-pulse 2.5s ease-in-out infinite;
+}
+
+/* In queue: pulse between default and light yellow (loading style) */
+@keyframes queue-color-pulse {
+  0%, 100% {
+    background-color: rgb(254 252 232); /* amber-50 - default light */
+    border-color: rgb(253 230 138 / 0.6);
+    color: rgb(146 64 14 / 0.85);
+  }
+  50% {
+    background-color: rgb(254 249 195); /* amber-100 - light yellow */
+    border-color: rgb(253 230 138);
+    color: rgb(120 53 15);
+  }
+}
+@keyframes queue-color-pulse-dark {
+  0%, 100% {
+    background-color: rgb(245 158 11 / 0.12);
+    border-color: rgb(245 158 11 / 0.22);
+    color: rgb(253 224 71 / 0.95);
+  }
+  50% {
+    background-color: rgb(245 158 11 / 0.26);
+    border-color: rgb(245 158 11 / 0.38);
+    color: rgb(254 240 138);
+  }
+}
+.animate-queue-pulse {
+  animation: queue-color-pulse 2.5s ease-in-out infinite;
+}
+.dark .animate-queue-pulse {
+  animation: queue-color-pulse-dark 2.5s ease-in-out infinite;
+}

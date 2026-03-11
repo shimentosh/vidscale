@@ -67,8 +67,17 @@ function UsageRow({ label, used, total, unit }: { label: string; used: number; t
 export function Header() {
     const location = useLocation();
     const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
-    const isPlayground = location.pathname.startsWith("/playground");
-    const isBrandKits = location.pathname.startsWith("/brand-kits");
+    const pathname = location.pathname;
+    const { backTo, backLabel } = (() => {
+      if (pathname === "/") return { backTo: "/", backLabel: "Home" };
+      if (pathname.startsWith("/outputs/view")) return { backTo: "/outputs", backLabel: "Outputs" };
+      if (pathname === "/playground/script-writing/preview") return { backTo: "/playground/script-writing", backLabel: "Script Writing" };
+      if (pathname.startsWith("/playground")) return { backTo: "/playground", backLabel: "Playground" };
+      if (pathname.startsWith("/settings")) return pathname === "/settings" ? { backTo: "/", backLabel: "Home" } : { backTo: "/settings", backLabel: "Settings" };
+      if (pathname === "/brand-kits") return { backTo: "/", backLabel: "Home" };
+      if (pathname.startsWith("/brand-kits")) return { backTo: "/brand-kits", backLabel: "Brand Kits" };
+      return { backTo: "/", backLabel: "Home" };
+    })();
     const [newProjectOpen, setNewProjectOpen] = useState(false);
     const newProjectRef = useRef<HTMLDivElement>(null);
     const [notifOpen, setNotifOpen] = useState(false);
@@ -86,8 +95,6 @@ export function Header() {
     };
     const [isDark, setIsDark] = useState(getInitialTheme);
 
-    const backTo = isPlayground ? "/playground" : isBrandKits ? "/brand-kits" : "/";
-    const backLabel = isPlayground ? "Playground" : isBrandKits ? "Brand Kit" : "Home";
 
     useEffect(() => {
         const root = document.documentElement;
@@ -129,7 +136,8 @@ export function Header() {
 
     const toggleTheme = () => setIsDark((prev) => !prev);
 
-    const backLink = (
+    const showBackLink = pathname !== "/";
+    const backLink = showBackLink ? (
         <Link
             to={backTo}
             className="flex items-center gap-2 py-2 pr-2 -ml-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
@@ -139,7 +147,7 @@ export function Header() {
                 {backLabel}
             </span>
         </Link>
-    );
+    ) : null;
 
     return (
         <header className="h-[69px] shrink-0 flex items-center justify-between border-b border-border px-6 bg-background">
