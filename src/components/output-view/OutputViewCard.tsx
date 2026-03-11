@@ -1,4 +1,4 @@
-import { FileVideo, ImageIcon, Music, FileIcon, Play, FileText, Mic, Eye, Trash2, Monitor, Clock, HardDrive, Calendar, CheckSquare, Square, Loader2 } from "lucide-react";
+import { FileVideo, ImageIcon, Music, FileIcon, Play, FileText, Mic, Eye, Trash2, Monitor, Clock, HardDrive, Calendar, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { WorkflowOutput } from "@/lib/workflowOutputs";
@@ -50,13 +50,6 @@ export function OutputViewCard({ out, singleItem, onViewScriptVoice, selectMode,
       {isFailed && (
         <div className="absolute inset-0 rounded-lg pointer-events-none bg-destructive/10 dark:bg-destructive/15" aria-hidden />
       )}
-      {selectMode && (
-        <div className="relative px-3 py-2 flex items-center gap-2 min-h-[40px] shrink-0">
-          <button type="button" onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }} className="p-0.5 rounded-full text-muted-foreground hover:text-foreground shrink-0" aria-label={isSelected ? "Deselect" : "Select"}>
-            {isSelected ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
-          </button>
-        </div>
-      )}
       <div className={cn("flex items-center justify-center bg-muted/30 shrink-0 relative", singleItem ? "aspect-video" : "aspect-video min-h-[120px]")}>
         <Icon size={singleItem ? 48 : 32} className="text-muted-foreground/60" />
         <div className={cn("absolute top-2 left-2 flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium", config.className, config.animate && (status === "queue" ? "animate-queue-pulse" : "animate-status-pulse"))}>
@@ -86,20 +79,21 @@ export function OutputViewCard({ out, singleItem, onViewScriptVoice, selectMode,
       </div>
       <div className="relative px-3 pb-2 flex items-center justify-between gap-2 text-[10px] text-muted-foreground shrink-0">
         <div className="flex flex-wrap gap-x-2 gap-y-0 items-center min-w-0">
+          {selectMode && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }} className="flex items-center justify-center w-7 h-7 rounded-lg border border-border bg-card hover:bg-muted/50 text-muted-foreground hover:text-foreground shrink-0" aria-label={isSelected ? "Deselect" : "Select"}>
+              {isSelected ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
+            </button>
+          )}
           {out.aspectRatio && (<span className="flex items-center gap-1 tabular-nums"><Monitor size={10} className="shrink-0 opacity-70" />{out.aspectRatio}</span>)}
           {out.durationSeconds != null && (<span className="flex items-center gap-1 tabular-nums"><Clock size={10} className="shrink-0 opacity-70" />{formatDuration(out.durationSeconds)}</span>)}
           {out.sizeBytes != null && (<span className="flex items-center gap-1"><HardDrive size={10} className="shrink-0 opacity-70" />{formatSize(out.sizeBytes)}</span>)}
         </div>
         <span className="flex items-center gap-1 shrink-0"><Calendar size={10} className="shrink-0 opacity-70" />{formatDate(out.createdAt)}</span>
       </div>
-      {isGenerating && (
-        <div className="px-3 pb-2.5 pt-0 shrink-0 border-t border-border/50 mt-0.5" aria-label="Processing">
-          <div className="flex items-center gap-1.5 text-[10px] text-amber-600 dark:text-amber-400 mb-1">
-            <Loader2 size={10} className="shrink-0 animate-spin" aria-hidden />
-            <span className="font-medium">Processing</span>
-          </div>
-          <div className="h-1 w-full rounded-full bg-muted/60 overflow-hidden" role="progressbar" aria-valuetext="In progress">
-            <div className="h-full w-full min-w-[40%] rounded-full bg-amber-500/80 animate-pulse" style={{ width: "70%" }} />
+      {isProcessing && (
+        <div className="px-3 pb-3 pt-1 shrink-0 border-t border-border/40 mt-0.5" aria-label="Processing">
+          <div className="h-1 w-full rounded-full bg-muted/50 dark:bg-white/10 overflow-hidden" role="progressbar" aria-valuetext="In progress">
+            <div className="h-full rounded-full bg-amber-500/90 dark:bg-amber-400/80 transition-all duration-300 animate-pulse" style={{ width: "70%" }} />
           </div>
         </div>
       )}

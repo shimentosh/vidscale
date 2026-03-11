@@ -320,7 +320,7 @@ export function OutputRunCard({
       </div>
       <div
         className={cn(
-          "relative flex-1 min-h-0 min-w-0 p-4 flex gap-3 overflow-x-auto items-stretch",
+          "relative flex-1 min-h-0 min-w-0 p-4 flex gap-3 overflow-x-auto overflow-y-hidden items-stretch scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           run.items.length > 1 ? "min-h-[100px]" : "min-h-0"
         )}
       >

@@ -1,4 +1,4 @@
-import { Play, Eye, Trash2, Monitor, Clock, HardDrive, Calendar, CheckSquare, Square, Loader2 } from "lucide-react";
+import { Play, Eye, Trash2, Monitor, Clock, HardDrive, Calendar, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { WorkflowOutput } from "@/lib/workflowOutputs";
@@ -64,12 +64,10 @@ export function OutputViewListRow({ out, selectMode, isSelected, onToggleSelect,
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }} aria-label="Delete"><Trash2 size={14} /></Button>
       </div>
       </div>
-      {isGenerating && (
-        <div className="px-4 pb-2 pt-0 flex items-center gap-2 shrink-0" aria-label="Processing">
-          <Loader2 size={10} className="shrink-0 text-amber-600 dark:text-amber-400 animate-spin" aria-hidden />
-          <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">Processing</span>
-          <div className="h-1 flex-1 min-w-[60px] max-w-[120px] rounded-full bg-muted/60 overflow-hidden" role="progressbar" aria-valuetext="In progress">
-            <div className="h-full w-[70%] rounded-full bg-amber-500/80 animate-pulse" />
+      {isProcessingRow && (
+        <div className="px-4 pb-3 pt-1 shrink-0 border-t border-border/40" aria-label="Processing">
+          <div className="h-1 w-full rounded-full bg-muted/50 dark:bg-white/10 overflow-hidden" role="progressbar" aria-valuetext="In progress">
+            <div className="h-full rounded-full bg-amber-500/90 dark:bg-amber-400/80 transition-all duration-300 animate-pulse" style={{ width: "70%" }} />
           </div>
         </div>
       )}

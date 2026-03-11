@@ -41,7 +41,7 @@ function saveOutputs(outputs: WorkflowOutput[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(outputs));
 }
 
-/** Demo outputs: 4 items total — 1 processing, 3 complete. Mix of single (no runId) and bulk (same runId). */
+/** Demo outputs: 7 items total — 2 single done, 1 bulk run with 1 done, 1 processing, 2 queue, 1 failed. */
 export function getDemoOutputs(): WorkflowOutput[] {
   const now = new Date().toISOString();
   const demoId = "demo-workflow-vidscale";
@@ -49,12 +49,15 @@ export function getDemoOutputs(): WorkflowOutput[] {
   const sampleVoice = "https://download.samplelib.com/mp3/sample-6s.mp3";
 
   return [
-    // Single outputs (each appears as its own run/card on Output page)
+    // Single outputs (each appears as its own run/card on Outputs page)
     { id: "out-demo-1", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Story_15s_clip.mp4", durationSeconds: 15, sizeBytes: 3_000_000, createdAt: now, script, voiceOverUrl: sampleVoice, aspectRatio: "9:16", status: "done" },
     { id: "out-demo-2", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Single_export_1080p.mp4", durationSeconds: 65, sizeBytes: 18_500_000, createdAt: now, script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "done" },
-    // Bulk run (2 items = one run/card on Output page: 1 done, 1 processing)
+    // Bulk run (5 items: 1 done, 1 processing, 2 queue, 1 failed) — open this run on Output view to see all statuses
     { id: "out-demo-3", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Intro_16x9_export.mp4", durationSeconds: 42, sizeBytes: 12_400_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "done" },
     { id: "out-demo-4", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Batch_processing.mp4", durationSeconds: 30, sizeBytes: 8_000_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "processing" },
+    { id: "out-demo-5", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Queued_clip_01.mp4", durationSeconds: 20, sizeBytes: 5_000_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "queue" },
+    { id: "out-demo-6", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Queued_clip_02.mp4", durationSeconds: 25, sizeBytes: 6_200_000, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "queue" },
+    { id: "out-demo-7", workflowId: demoId, workflowName: "Demo Workflow", type: "video", name: "Export_failed.mp4", durationSeconds: 0, sizeBytes: 0, createdAt: now, runId: "run-demo-bulk", script, voiceOverUrl: sampleVoice, aspectRatio: "16:9", status: "failed" },
   ];
 }
 
@@ -146,6 +149,17 @@ export function deleteOutputs(ids: string[]): number {
   const removed = loadOutputs().length - list.length;
   if (removed > 0) saveOutputs(list);
   return removed;
+}
+
+/** Re-queue failed outputs by id so they can be retried (one save). Sets status to "queue". */
+export function retryOutputs(ids: string[]): number {
+  if (ids.length === 0) return 0;
+  const set = new Set(ids);
+  const list = loadOutputs().map((o) =>
+    set.has(o.id) ? { ...o, status: "queue" as const } : o
+  );
+  saveOutputs(list);
+  return ids.length;
 }
 
 export function formatSize(bytes: number): string {

@@ -4,6 +4,9 @@ import {
   getRunByWorkflowAndKey,
   getWorkflowOutputFolderPath,
   deleteOutputs,
+  retryOutputs,
+  formatSize,
+  formatDuration,
   type WorkflowOutput,
 } from "@/lib/workflowOutputs";
 import {
@@ -81,11 +84,52 @@ export function OutputViewPage() {
     setRefresh((r) => r + 1);
   }, []);
 
+  const failedIds = useMemo(
+    () => run.items.filter((i) => i.status === "failed").map((i) => i.id),
+    [run.items]
+  );
+  const handleRetryAllFailed = useCallback(() => {
+    if (failedIds.length === 0) return;
+    retryOutputs(failedIds);
+    setRefresh((r) => r + 1);
+  }, [failedIds]);
+
   const openFolder = useCallback(() => {
     const url = folderPathToFileUrl(folderPath);
     if (url) window.open(url, "_blank", "noopener");
     else navigator.clipboard.writeText(folderPath);
   }, [folderPath]);
+
+  const handleExportCSV = useCallback(() => {
+    const headers = ["Name", "Type", "Status", "Aspect ratio", "Duration", "Size", "Created"];
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const rows = filteredItems.map((o) => [
+      o.name,
+      o.type ?? "",
+      o.status ?? "",
+      o.aspectRatio ?? "",
+      o.durationSeconds != null ? formatDuration(o.durationSeconds) : "",
+      o.sizeBytes != null ? formatSize(o.sizeBytes) : "",
+      o.createdAt ?? "",
+    ].map(escape).join(","));
+    const csv = [headers.map(escape).join(","), ...rows].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `outputs-${workflowName.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [filteredItems, workflowName]);
+
+  const handlePushToStorage = useCallback(() => {
+    // Placeholder: integrate with user's storage (e.g. cloud bucket, local path)
+    window.alert("Push to my storage — connect your storage in settings to export outputs here.");
+  }, []);
+
+  const handlePushToUContents = useCallback(() => {
+    // Placeholder: integrate with uContents
+    window.alert("Push to uContents — connect uContents in settings to send outputs here.");
+  }, []);
 
   const processingCount = run.items.filter((i) => i.status === "processing").length;
   const queueCount = run.items.filter((i) => i.status === "queue").length;
@@ -110,12 +154,21 @@ export function OutputViewPage() {
         <OutputViewToolbar
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          doneCount={doneCount}
+          queueCount={queueCount}
+          processingCount={processingCount}
+          failedCount={failedCount}
+          totalCount={run.items.length}
           selectMode={selectMode}
           selectedCount={selectedIds.size}
           onSelectModeToggle={handleSelectModeToggle}
           onSelectAll={handleSelectAll}
           onDeselectAll={() => setSelectedIds(new Set())}
           onBulkDelete={handleBulkDelete}
+          onRetryAllFailed={handleRetryAllFailed}
+          onExportCSV={handleExportCSV}
+          onPushToStorage={handlePushToStorage}
+          onPushToUContents={handlePushToUContents}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
